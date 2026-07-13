@@ -110,19 +110,18 @@ public List<GridTile> GetNeighbors(GridTile tile)
     int y = tile.Y;
 
 
-    // Up
-    AddNeighbor(neighbors, x, y + 1);
-
-    // Down
-    AddNeighbor(neighbors, x, y - 1);
-
-    // Right
-    AddNeighbor(neighbors, x + 1, y);
-
-    // Left
-    AddNeighbor(neighbors, x - 1, y);
+    // Cardinal directions
+    AddNeighbor(neighbors, x, y + 1); // Up
+    AddNeighbor(neighbors, x, y - 1); // Down
+    AddNeighbor(neighbors, x + 1, y); // Right
+    AddNeighbor(neighbors, x - 1, y); // Left
 
 
+    // Diagonal directions
+    AddNeighbor(neighbors, x + 1, y + 1); // Up Right
+    AddNeighbor(neighbors, x - 1, y + 1); // Up Left
+    AddNeighbor(neighbors, x + 1, y - 1); // Down Right
+    AddNeighbor(neighbors, x - 1, y - 1); // Down Left
 
 
     return neighbors;

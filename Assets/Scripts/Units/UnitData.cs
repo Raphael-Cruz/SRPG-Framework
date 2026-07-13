@@ -12,8 +12,9 @@ public class UnitData : ScriptableObject
 
     [Header("Stats")]
     public int MaxHP = 20;
-    public int Movement = 5;
-    public int Attack = 5;
+     public int MovementRange = 5;
+     public int AttackRange = 1;
     public int Defense = 2;
     public int Speed = 5;
 }
+
