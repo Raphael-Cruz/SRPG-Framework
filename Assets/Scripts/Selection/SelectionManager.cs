@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class SelectionManager : MonoBehaviour
 {
+      public static SelectionManager Instance { get; private set; }
     private Unit selectedUnit;
 
 
@@ -17,10 +18,20 @@ public class SelectionManager : MonoBehaviour
     [SerializeField] private MovementRangeCalculator movementRange;
 
 
+    private void Awake()
+    {
+        if(Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
+        Instance = this;
+    }
+    
     public void SelectUnit(Unit unit)
     {
-        Debug.Log("SelectionManager -> SelectUnit");
+  
         if (unit == null)
             return;
 
@@ -53,12 +64,13 @@ public class SelectionManager : MonoBehaviour
 
 
 
-        // Clicking the same unit deselects it
-        if (selectedUnit == unit)
-        {
-            DeselectCurrentUnit();
-            return;
-        }
+     // Clicking the selected unit again leaves movement selection
+    // and returns to action choices.
+    if (selectedUnit == unit)
+    {
+        UnitActionController.Instance.OpenActionSelection();
+        return;
+    }
 
 
 
@@ -86,10 +98,13 @@ public class SelectionManager : MonoBehaviour
 
         RefreshSelectionOptions();
 
+        //select the unit starts the unit movement.
+        UnitActionController.Instance.BeginUnitTurn(selectedUnit);
+        UnitActionController.Instance.StartMove();
+
 
 
         OnUnitSelected?.Invoke(selectedUnit);
-        UnitActionController.Instance?.BeginUnitTurn(selectedUnit);
 
 
 

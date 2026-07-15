@@ -123,7 +123,7 @@ The objective is to keep systems reusable and easy to expand.
 * [x] Movement execution
 * [x] Attack system
 * [x] Damage calculation
-* [] Action Menu UI - developing
+* [x] Action Menu UI 
 
 ### Phase 3 - Advanced Gameplay
 

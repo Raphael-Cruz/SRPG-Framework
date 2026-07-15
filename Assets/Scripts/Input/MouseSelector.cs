@@ -1,101 +1,138 @@
-using UnityEngine;
 using System;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 public class MouseSelector : MonoBehaviour
 {
     [SerializeField] private Camera mainCamera;
     [SerializeField] private SelectionManager selectionManager;
-    
 
     private GridTile currentTile;
 
-public event Action<GridTile> HoveredTileChanged;
+    public event Action<GridTile> HoveredTileChanged;
 
-public GridTile CurrentTile => currentTile;
+    public GridTile CurrentTile => currentTile;
 
-
-private void Start()
-{
-    InputManager.Instance.LeftClick += HandleClick;
-}
-
-private void OnDisable()
-{
-    if (InputManager.Instance != null)
-        InputManager.Instance.LeftClick -= HandleClick;
-}
 
     private void Update()
     {
         DetectTile();
+
+        if (Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            HandleClick();
+        }
     }
 
-private void HandleClick()
-{
-    if (currentTile == null)
-        return;
 
-
-    // MouseSelector routes the click depending on the state.
-  if(UnitActionController.Instance != null)
-{
-    switch(UnitActionController.Instance.State)
+    private void HandleClick()
     {
-        case UnitActionState.SelectingAction:
-            break;
+        // Ignore gameplay clicks when interacting with UI
+        if (EventSystem.current != null &&
+            EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
 
-        case UnitActionState.Moving:
-            UnitActionController.Instance.TryMove(currentTile);
+
+        if (currentTile == null)
             return;
 
-        case UnitActionState.SelectingAttackTarget:
+
+
+        Unit unit = currentTile.Occupant;
+
+
+
+        // ==============================
+        // Attack targeting has priority
+        // ==============================
+        if (UnitActionController.Instance != null &&
+            UnitActionController.Instance.State == UnitActionState.SelectingAttackTarget)
+        {
             UnitActionController.Instance.TryAttack(currentTile);
             return;
+        }
+
+
+
+        // ==============================
+        // Clicking a unit has priority
+        // over movement routing.
+        //
+        // This allows:
+        // Select unit
+        // -> movement mode
+        // -> click same unit
+        // -> open action menu
+        // ==============================
+        if (unit != null)
+        {
+            selectionManager.SelectUnit(unit);
+            return;
+        }
+
+
+
+        // ==============================
+        // Tile actions
+        // ==============================
+        if (UnitActionController.Instance != null)
+        {
+            switch (UnitActionController.Instance.State)
+            {
+                case UnitActionState.Moving:
+
+                    UnitActionController.Instance.TryMove(currentTile);
+                    return;
+
+
+                case UnitActionState.SelectingAction:
+                case UnitActionState.None:
+                case UnitActionState.Finished:
+                    break;
+            }
+        }
+
+
+        Debug.Log("No valid action on this tile.");
     }
-}
 
 
 
-    Unit unit = currentTile.Occupant;
-
-
-    if (unit == null)
+    private void DetectTile()
     {
-        Debug.Log("No unit on this tile.");
-        return;
-    }
+        GridTile tile = GetTileUnderMouse();
 
+        if (tile == currentTile)
+            return;
 
-    selectionManager.SelectUnit(unit);
-}
-
-private void DetectTile()
-{
-    GridTile tile = GetTileUnderMouse();
-
-    if(tile == null)
-        return;
-
-    if(currentTile != tile)
-    {
         currentTile = tile;
 
         HoveredTileChanged?.Invoke(currentTile);
     }
-}
+
+
 
     private GridTile GetTileUnderMouse()
-{
-    Ray ray = mainCamera.ScreenPointToRay(
-        InputManager.Instance.MousePosition
-    );
-
-    if(Physics.Raycast(ray, out RaycastHit hit))
     {
-        return GridManager.Instance
-            .GetTileFromWorldPosition(hit.point);
-    }
+        if (mainCamera == null)
+            return null;
 
-    return null;
-}
+
+        Ray ray = mainCamera.ScreenPointToRay(
+            InputManager.Instance.MousePosition
+        );
+
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            return GridManager.Instance.GetTileFromWorldPosition(hit.point);
+        }
+
+
+        return null;
+    }
 }

@@ -94,7 +94,7 @@ public class TurnManager : MonoBehaviour
 
         if (unit.IsPlayerControlled)
         {
-            selectionManager.SelectUnit(unit);
+           // selectionManager.SelectUnit(unit);
         }
         else
         {

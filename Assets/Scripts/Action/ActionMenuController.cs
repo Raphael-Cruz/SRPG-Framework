@@ -52,17 +52,18 @@ public class ActionMenuController : MonoBehaviour
 
 
 
-    public void SelectMove()
+public void SelectMove()
+{
+   
+
+    if(currentUnit == null)
     {
-        if(currentUnit == null)
-            return;
-
-
-        UnitActionController.Instance.StartMove();
-
-
-        
+        Debug.LogError("CurrentUnit is NULL");
+        return;
     }
+
+    UnitActionController.Instance.StartMove();
+}
 
 
 

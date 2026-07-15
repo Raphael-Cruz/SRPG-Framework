@@ -49,6 +49,7 @@ private void HandleConfirmPressed()
 }
     public void BeginMovement(Unit unit)
     {
+        Debug.Log("UnitMovementController.BeginMovement");
         if(unit == null)
             return;
 
@@ -142,33 +143,62 @@ Debug.Log("UnitMovementController -> ConfirmMove");
 }
 
 
-
 public bool CancelMove()
 {
-    if(State != MovementState.Previewing)
+    if (State == MovementState.None)
         return false;
 
 
-    movingUnit.transform.position =
-        originalTile.WorldPosition;
+    // Case 1:
+    // Player already previewed a destination.
+    if (State == MovementState.Previewing)
+    {
+        movingUnit.transform.position =
+            originalTile.WorldPosition;
 
 
-    movingUnit.ClearPreviewTile();
+        movingUnit.ClearPreviewTile();
 
-    previewTile = null;
-
-
-    State = MovementState.SelectingDestination;
+        previewTile = null;
 
 
-    movementRange.ShowMovementRange(movingUnit);
+        movementRange.ShowMovementRange(movingUnit);
 
 
-    Debug.Log("Movement cancelled");
+        State = MovementState.SelectingDestination;
 
-    OnPreviewEnded?.Invoke();
 
-    return true;
+        Debug.Log("Movement preview cancelled");
+
+        OnPreviewEnded?.Invoke();
+
+        return true;
+    }
+
+
+    // Case 2:
+    // Player opened movement but has not selected a tile yet.
+    if (State == MovementState.SelectingDestination)
+    {
+        movementRange.ClearMovementRange();
+
+
+        movingUnit = null;
+        previewTile = null;
+        originalTile = null;
+
+
+        State = MovementState.None;
+
+
+        Debug.Log("Movement selection cancelled");
+
+
+        return true;
+    }
+
+
+    return false;
 }
 
 public void HandleTileClick(GridTile clickedTile)

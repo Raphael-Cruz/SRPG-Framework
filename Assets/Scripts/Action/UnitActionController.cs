@@ -53,23 +53,45 @@ private void HandleCancelPressed()
 public void BeginUnitTurn(Unit unit)
 {
     Debug.Log("UnitActionController -> BeginUnitTurn");
+
     selectedUnit = unit;
 
     State = UnitActionState.SelectingAction;
-
 
     Debug.Log(
         $"Action selection started for {unit.name}"
     );
 
-
-    actionMenu.Show(unit);
+    
+    // The menu now opens only after:
+    //  clicking the selected unit again, or
+    //  confirming movement.
 }
 
 
+public void OpenActionSelection()
+{
+    if (selectedUnit == null)
+        return;
+
+
+    movementController.CancelMove();
+
+
+    State = UnitActionState.SelectingAction;
+
+
+    actionMenu.Show(selectedUnit);
+
+
+    Debug.Log(
+        $"{selectedUnit.name} returned to action selection."
+    );
+}
 
 public void StartMove()
 {
+    
     if(selectedUnit == null)
         return;
 
@@ -207,17 +229,25 @@ public void TryMove(GridTile tile)
 
 private void HandleMovementConfirmed(Unit unit)
 {
-    State = UnitActionState.SelectingAction;
+    Debug.Log("UnitActionController -> HandleMovementConfirmed");
 
+
+    if (!unit.CanMove && !unit.CanAct)
+    {
+        FinishTurn();
+        return;
+    }
+
+
+    State = UnitActionState.SelectingAction;
 
     actionMenu.Show(unit);
 
-Debug.Log("UnitActionController -> HandleMovementConfirmed");
+
     Debug.Log(
         $"{unit.name} finished moving. Choose next action."
     );
 }
-
 private void HandleAttackConfirmed(Unit unit)
 {
     CheckRemainingActions(unit);
@@ -225,20 +255,27 @@ private void HandleAttackConfirmed(Unit unit)
 
 private void CheckRemainingActions(Unit unit)
 {
-    if(unit.CanAct)
-    {
-        State = UnitActionState.SelectingAction;
+    bool canMove = unit.CanMove;
+    bool canAct = unit.CanAct;
 
-        actionMenu.Show(unit);
 
-        Debug.Log(
-            $"{unit.name} still has actions."
-        );
-    }
-    else
+    Debug.Log(
+        $"Remaining options - Move: {canMove}, Act: {canAct}"
+    );
+
+
+    // Nothing left to do
+    if (!canMove && !canAct)
     {
         FinishTurn();
+        return;
     }
+
+
+    // Something remains (movement or action)
+    State = UnitActionState.SelectingAction;
+
+    actionMenu.Show(unit);
 }
 
 }
