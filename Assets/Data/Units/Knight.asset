@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitName: Knight
   Portrait: {fileID: 0}
-  Prefab: {fileID: 5349262993644232702, guid: 18f8264bdb361fd43a79a5841694dfad, type: 3}
+  Prefab: {fileID: 4259564464024163283, guid: 1a0fcfdf5048d384581787585cdf4f3c, type: 3}
   MaxHP: 20
-  Movement: 5
-  Attack: 6
+  MovementRange: 4
+  AttackRange: 1
   Defense: 4
   Speed: 5

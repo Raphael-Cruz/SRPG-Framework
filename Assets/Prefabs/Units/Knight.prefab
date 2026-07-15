@@ -89,7 +89,7 @@ Transform:
   m_GameObject: {fileID: 662317032914732058}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -878,8 +878,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2721240513285340341}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1542,6 +1542,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4892201984789297043}
   - component: {fileID: 8892718767775658159}
+  - component: {fileID: 4758877622796511408}
   m_Layer: 0
   m_Name: Knight
   m_TagString: Untagged
@@ -1580,6 +1581,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   data: {fileID: 11400000, guid: 411199b5dde45f54180dc27f68e8b379, type: 2}
   currentHP: 0
+--- !u!114 &4758877622796511408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4259564464024163283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35e306a66fd78c043a6892f70702ad85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRenderer: {fileID: 0}
+  exhaustedStrength: 0.6
+  exhaustedBrightness: 0.6
+  selectionColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  selectionStrength: 0.5
 --- !u!1 &4273585299593972815
 GameObject:
   m_ObjectHideFlags: 0
@@ -1710,8 +1728,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4498070714235848948}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2270,8 +2288,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6955966151185467239}
-  - {fileID: 2062525496549804993}
   - {fileID: 3646138066809377855}
+  - {fileID: 2062525496549804993}
   m_Father: {fileID: 2358128030843114584}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6005512513784980218

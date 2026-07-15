@@ -119,10 +119,10 @@ The objective is to keep systems reusable and easy to expand.
 
 ### Phase 2 - Combat Foundation
 
-* [ ] Turn management
-* [ ] Movement execution
-* [ ] Attack system
-* [ ] Damage calculation
+* [x] Turn management
+* [x] Movement execution
+* [x] Attack system
+* [x] Damage calculation
 * [ ] Combat UI
 
 ### Phase 3 - Advanced Gameplay
