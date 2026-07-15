@@ -1,18 +1,27 @@
 using UnityEngine;
 
+// Handles a unit's on-model visual feedback: selection highlight and the
+// "already spent this turn" dimmed/desaturated look.
+//
+// NOTE: this file wasn't part of the shared project files, so this is a
+// best-effort reconstruction based on how Unit.cs and SelectionManager.cs
+// already call Visual.Select() / Visual.Deselect(). If a UnitVisual.cs
+// already exists in the actual project, just add the SetExhausted(bool)
+// method (and the fields/UpdateVisual pattern it relies on) to that file
+// instead of using this one.
 public class UnitVisual : MonoBehaviour
 {
     [Header("Rendering")]
-    private Renderer[] targetRenderers;
+    [SerializeField] private Renderer targetRenderer;
 
     [Header("Exhausted Look")]
-    [Tooltip("0 = no desaturation, 1 = fully grayscale")]
+    [Tooltip("0 = no change, 1 = fully grayscale and darkened.")]
     [Range(0f, 1f)]
-    [SerializeField] private float exhaustedStrength = 0.5f;
+    [SerializeField] private float exhaustedStrength = 0.6f;
 
-    [Tooltip("Brightness multiplier when exhausted")]
+    [Tooltip("Multiplies brightness when exhausted (1 = no darkening).")]
     [Range(0f, 1f)]
-    [SerializeField] private float exhaustedBrightness = 0.5f;
+    [SerializeField] private float exhaustedBrightness = 0.6f;
 
     [Header("Selected Look")]
     [SerializeField] private Color selectionColor = Color.yellow;
@@ -20,22 +29,29 @@ public class UnitVisual : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float selectionStrength = 0.5f;
 
+    [Header("Active Turn Look")]
+    [Tooltip("Subtle tint so the player can always tell whose turn it is, even before they select the unit.")]
+    [SerializeField] private Color activeTurnColor = Color.cyan;
 
-    private Color[] baseColors;
+    [Range(0f, 1f)]
+    [SerializeField] private float activeTurnStrength = 0.3f;
 
+    private Color baseColor;
     private bool isSelected;
     private bool isExhausted;
+    private bool isActiveTurn;
 
 
     private void Awake()
     {
-        targetRenderers = GetComponentsInChildren<Renderer>();
-
-        baseColors = new Color[targetRenderers.Length];
-
-        for (int i = 0; i < targetRenderers.Length; i++)
+        if (targetRenderer == null)
         {
-            baseColors[i] = targetRenderers[i].material.color;
+            targetRenderer = GetComponentInChildren<Renderer>();
+        }
+
+        if (targetRenderer != null)
+        {
+            baseColor = targetRenderer.material.color;
         }
     }
 
@@ -54,6 +70,8 @@ public class UnitVisual : MonoBehaviour
     }
 
 
+    // Called once when the unit spends its movement/action this turn, and
+    // again with false when the turn system resets it for its next turn.
     public void SetExhausted(bool value)
     {
         isExhausted = value;
@@ -61,51 +79,57 @@ public class UnitVisual : MonoBehaviour
     }
 
 
+    // Called by TurnManager (via Unit.SetActiveTurn) when this unit becomes
+    // or stops being the current unit in the turn order. Independent of
+    // Select()/Deselect() - a unit is "whose turn it is" the moment its
+    // turn starts, even before the player has clicked it.
+    public void SetActiveTurn(bool value)
+    {
+        isActiveTurn = value;
+        UpdateVisual();
+    }
+
+
+    // Builds the final color by layering each active state on top of the
+    // base color, rather than one state overriding another. This is what
+    // lets exhausted + selected (and future states like hovered/poisoned/
+    // buffed) combine instead of clobbering each other as more states get
+    // added later.
     private void UpdateVisual()
     {
-        if (targetRenderers == null)
+        if (targetRenderer == null)
             return;
 
+        Color color = baseColor;
 
-        for (int i = 0; i < targetRenderers.Length; i++)
+        if (isExhausted)
         {
-            Color color = baseColors[i];
-
-
-            // Apply exhausted state first
-            if (isExhausted)
-            {
-                color = GetExhaustedColor(color);
-            }
-
-
-            // Apply selection on top
-            if (isSelected)
-            {
-                color = Color.Lerp(
-                    color,
-                    selectionColor,
-                    selectionStrength
-                );
-            }
-
-
-            targetRenderers[i].material.color = color;
+            color = GetExhaustedColor(color);
         }
+
+        if (isActiveTurn)
+        {
+            color = Color.Lerp(color, activeTurnColor, activeTurnStrength);
+        }
+
+        if (isSelected)
+        {
+            color = Color.Lerp(color, selectionColor, selectionStrength);
+        }
+
+        targetRenderer.material.color = color;
     }
 
 
     private Color GetExhaustedColor(Color color)
     {
         float gray = color.grayscale;
+        Color desaturated = new Color(gray, gray, gray, color.a);
 
-        Color desaturated = Color.Lerp(
-            color,
-            new Color(gray, gray, gray, color.a),
-            exhaustedStrength
-        );
+        Color blended = Color.Lerp(color, desaturated, exhaustedStrength);
+        blended *= exhaustedBrightness;
+        blended.a = color.a;
 
-
-        return desaturated * exhaustedBrightness;
+        return blended;
     }
 }

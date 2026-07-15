@@ -2,47 +2,44 @@ using UnityEngine;
 
 public class UnitSpawnerTest : MonoBehaviour
 {
-    [SerializeField] private Unit unitPrefab;
+    [Header("Prefabs")]
+    [SerializeField] private Unit knightPrefab;
+   
+     [SerializeField] private Unit enemyPrefab;
 
-    [Header("Spawn Position")]
-    [SerializeField] private int spawnX = 3;
-    [SerializeField] private int spawnY = 4;
+  private void Start()
+{
+    SpawnUnit(knightPrefab, 0, 0);
+    SpawnUnit(knightPrefab, 0, 4);
+    SpawnUnit(enemyPrefab, 2, 3);
 
 
-    private void Start()
+    BattleManager.Instance.StartBattle();
+}
+
+    private Unit SpawnUnit(Unit prefab, int x, int y)
     {
-        SpawnUnit();
-    }
+        GridTile tile = GridManager.Instance.GetTile(x, y);
 
-
-    private void SpawnUnit()
-    {
-        GridTile tile =
-            GridManager.Instance.GetTile(spawnX, spawnY);
-
-
-        if(tile == null)
+        if (tile == null)
         {
-            Debug.LogError(
-                $"Cannot spawn. Tile ({spawnX},{spawnY}) does not exist."
-            );
-
-            return;
+            Debug.LogError($"Cannot spawn. Tile ({x},{y}) does not exist.");
+            return null;
         }
 
-
         Unit unit = Instantiate(
-            unitPrefab,
+            prefab,
             tile.WorldPosition,
             Quaternion.identity
         );
 
-
         unit.SetTile(tile);
 
+        InitiativeOrderSystem.Instance.Register(unit);
+ 
 
-        Debug.Log(
-            $"Spawned {unit.name} at Tile ({tile.X},{tile.Y})"
-        );
+        Debug.Log($"Spawned {unit.name} at Tile ({tile.X},{tile.Y})");
+
+        return unit;
     }
 }

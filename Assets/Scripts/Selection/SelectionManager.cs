@@ -1,5 +1,5 @@
-using UnityEngine;
 using System;
+using UnityEngine;
 
 public class SelectionManager : MonoBehaviour
 {
@@ -7,10 +7,15 @@ public class SelectionManager : MonoBehaviour
 
 
     public Unit SelectedUnit => selectedUnit;
+
+
     public event Action<Unit> OnUnitSelected;
     public event Action OnUnitDeselected;
+
+
     [SerializeField] private SelectionIndicator indicator;
     [SerializeField] private MovementRangeCalculator movementRange;
+
 
 
     public void SelectUnit(Unit unit)
@@ -18,23 +23,45 @@ public class SelectionManager : MonoBehaviour
         if (unit == null)
             return;
 
-        // Units that have already spent their turn (moved and/or acted)
-        // can't be selected at all - no indicator, no movement range,
-        // no deselect-by-reclicking. Clicking one simply does nothing here;
-        // a small "already acted" feedback can be hooked in later.
-        if (!unit.CanBeSelected)
+
+
+        // Only allow selection during active battle
+        if (BattleManager.Instance != null &&
+            BattleManager.Instance.State != BattleState.Fighting)
+        {
             return;
+        }
 
 
-        // If clicking the same unit 
-      if (selectedUnit == unit)
-{
-    DeselectCurrentUnit();
-    return;
-}
+
+        // Unit has finished all actions
+        if (!unit.CanBeSelected)
+        {
+            Debug.Log($"{unit.name} has no actions left.");
+            return;
+        }
 
 
-        // Deselect previous unit
+
+        // Only current turn unit can be controlled
+        if (TurnManager.Instance != null &&
+            unit != TurnManager.Instance.CurrentUnit)
+        {
+            return;
+        }
+
+
+
+        // Clicking the same unit deselects it
+        if (selectedUnit == unit)
+        {
+            DeselectCurrentUnit();
+            return;
+        }
+
+
+
+        // Remove previous selection
         if (selectedUnit != null)
         {
             DeselectCurrentUnit();
@@ -44,21 +71,55 @@ public class SelectionManager : MonoBehaviour
 
         selectedUnit = unit;
 
-        selectedUnit.Visual.Select();
+
+
+        selectedUnit.Select();
+
+
+
         indicator.Show(
-    selectedUnit.transform.position
-);
+            selectedUnit.transform.position
+        );
+
+
+
+        RefreshSelectionOptions();
+
+
 
         OnUnitSelected?.Invoke(selectedUnit);
-        movementRange.ShowMovementRange(selectedUnit);
+        UnitActionController.Instance?.BeginUnitTurn(selectedUnit);
+
+
 
         Debug.Log(
             $"Selected Unit: {selectedUnit.name}"
-);
-
-
-   
+        );
     }
+
+
+
+
+    private void RefreshSelectionOptions()
+    {
+        if (selectedUnit == null)
+            return;
+
+
+
+        movementRange.ClearMovementRange();
+
+
+
+        // Only show movement if the unit still has movement available
+        if (selectedUnit.CanMove)
+        {
+            movementRange.ShowMovementRange(selectedUnit);
+        }
+    }
+
+
+
 
 
     public void DeselectCurrentUnit()
@@ -67,17 +128,28 @@ public class SelectionManager : MonoBehaviour
             return;
 
 
+
         Debug.Log(
             $"Deselected Unit: {selectedUnit.name}"
         );
 
 
-        selectedUnit.Visual.Deselect();
+
+        selectedUnit.Deselect();
+
+
+
         movementRange.ClearMovementRange();
-        selectedUnit = null;
-        
+
+
+
         indicator.Hide();
+
+
+
         OnUnitDeselected?.Invoke();
+
+
 
         selectedUnit = null;
     }

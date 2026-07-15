@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Unit : MonoBehaviour
@@ -5,53 +6,90 @@ public class Unit : MonoBehaviour
     [Header("Configuration")]
     [SerializeField] private UnitData data;
 
+
     [Header("Runtime State")]
     [SerializeField] private int currentHP;
-      private UnitVisual visual;
+
+    private UnitVisual visual;
 
     public UnitVisual Visual => visual;
 
 
     private GridTile currentTile;
 
+
     private bool hasMoved;
     private bool hasActed;
+
+
+    [Header("Team")]
+    [SerializeField]
+    private UnitTeam team;
+
+    public UnitTeam Team => team;
 
 
     public UnitData Data => data;
 
     public int CurrentHP => currentHP;
 
-
-public GridTile CurrentTile => currentTile;
+    public GridTile CurrentTile => currentTile;
 
 
     public bool HasMoved => hasMoved;
 
     public bool HasActed => hasActed;
 
+
     public bool CanMove => !hasMoved;
 
     public bool CanAct => !hasActed;
 
+
     public bool IsAlive => currentHP > 0;
 
- 
+
     public bool TurnFinished => hasMoved && hasActed;
+
 
     public bool CanBeSelected => !TurnFinished;
 
 
+    public bool IsPlayerControlled =>
+        team == UnitTeam.Player;
 
 
+
+    public event Action<Unit> OnTurnStateChanged;
+
+
+private GridTile previewTile;
+
+public GridTile EffectiveTile =>
+    previewTile != null ? previewTile : currentTile;
 
     private void Awake()
     {
         currentHP = data.MaxHP;
-         visual = GetComponent<UnitVisual>();
+
+        visual = GetComponent<UnitVisual>();
+
+        InitiativeOrderSystem.Instance?.Register(this);
+    }
+
+public void SetCurrentTile(GridTile tile)
+{
+    currentTile = tile;
+}
+
+    private void OnDestroy()
+    {
+        InitiativeOrderSystem.Instance?.Unregister(this);
     }
 
 
+
+    // Called when this unit's turn begins
     public void ResetTurn()
     {
         hasMoved = false;
@@ -59,6 +97,7 @@ public GridTile CurrentTile => currentTile;
 
         RefreshVisualState();
     }
+
 
 
     public void MoveUsed()
@@ -69,6 +108,7 @@ public GridTile CurrentTile => currentTile;
     }
 
 
+
     public void ActionUsed()
     {
         hasActed = true;
@@ -77,82 +117,161 @@ public GridTile CurrentTile => currentTile;
     }
 
 
-    // Single place responsible for keeping the visual in sync with
-    // gameplay state. As more ways to spend a turn are added (attack,
-    // wait, heal, cast, item, rescue, trade...), each one just needs to
-    // update its own flag and call this - no need to touch the visual
-    // system from every action method individually.
+
+    // Ends turn manually
+    public void FinishTurn()
+    {
+        hasMoved = true;
+        hasActed = true;
+
+        RefreshVisualState();
+            OnTurnStateChanged?.Invoke(this);
+    }
+
+
+
     private void RefreshVisualState()
     {
         visual?.SetExhausted(TurnFinished);
+
+        
     }
 
 
-public void SetTile(GridTile tile)
-{
-    currentTile = tile;
-    tile.SetOccupant(this);
-}
 
-public void Select()
-{
-    // visual feedback later
-}
-
-public void Deselect()
-{
-    // remove visual feedback later
-}
-
-public void MoveTo(GridTile targetTile)
-{
-    if (!CanMove)
+    public void SetActiveTurn(bool value)
     {
-        Debug.Log($"{name} already moved this turn.");
-        return;
+        visual?.SetActiveTurn(value);
     }
 
-    if (targetTile.Occupant != null)
+
+
+
+    public void SetTile(GridTile tile)
     {
-        Debug.Log("Tile occupied.");
-        return;
+        currentTile = tile;
+
+        tile.SetOccupant(this);
     }
 
 
-    if (currentTile != null)
+
+    public void Select()
     {
-        currentTile.ClearOccupant();
+        visual?.Select();
     }
 
 
-    transform.position = targetTile.WorldPosition;
+
+    public void Deselect()
+    {
+        visual?.Deselect();
+    }
 
 
-    currentTile = targetTile;
-    targetTile.SetOccupant(this);
+
+
+    public void MoveTo(GridTile targetTile)
+    {
+        if (!CanMove)
+        {
+            Debug.Log($"{name} already moved this turn.");
+            return;
+        }
+
+
+        if (targetTile.Occupant != null)
+        {
+            Debug.Log("Tile occupied.");
+            return;
+        }
 
 
 
-    // No attack/action step exists yet, so for now moving spends the
-    // whole turn. When a real action system is added, remove this line
-    // and have that system call ActionUsed() (or not, for units that
-    // choose to wait) instead - TurnFinished/CanBeSelected/RefreshVisualState
-    // don't need to change at all.
-  
-    FinishTurn();
+        if (currentTile != null)
+        {
+            currentTile.ClearOccupant();
+        }
 
-    Debug.Log(
-        $"{name} moved to ({targetTile.X},{targetTile.Y})"
-    );
-}
 
-public void FinishTurn()
+
+        transform.position = targetTile.WorldPosition;
+
+
+        currentTile = targetTile;
+
+        targetTile.SetOccupant(this);
+
+
+
+        MoveUsed();
+
+
+
+        Debug.Log(
+            $"{name} moved to ({targetTile.X},{targetTile.Y})"
+        );
+    }
+
+
+public void SetPreviewTile(GridTile tile)
 {
-    
-  MoveUsed();
-    ActionUsed();
-
-   
+    previewTile = tile;
 }
 
+
+public void ClearPreviewTile()
+{
+    previewTile = null;
+}
+
+
+    public void TakeDamage(int amount)
+    {
+        currentHP -= amount;
+
+
+        currentHP = Mathf.Max(currentHP, 0);
+
+
+
+        Debug.Log(
+            $"{name} HP: {currentHP}/{data.MaxHP}"
+        );
+
+
+
+        if(currentHP <= 0)
+        {
+            Die();
+        }
+    }
+
+
+
+
+    private void Die()
+    {
+        Debug.Log($"{name} died");
+
+
+        if(currentTile != null)
+        {
+            currentTile.ClearOccupant();
+        }
+
+
+        gameObject.SetActive(false);
+
+
+        BattleManager.Instance?.CheckBattleEnd();
+    }
+}
+
+
+
+public enum UnitTeam
+{
+    Player,
+    Enemy
 }

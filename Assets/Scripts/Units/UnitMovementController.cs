@@ -1,88 +1,150 @@
 using UnityEngine;
-
+using System;
 public class UnitMovementController : MonoBehaviour
 {
-[SerializeField] private SelectionManager selectionManager;
-[SerializeField] private MovementRangeCalculator movementRange;
+    [SerializeField] private MovementRangeCalculator movementRange;
 
-private void Start()
+    private Unit movingUnit;
+
+    private GridTile originalTile;
+    private GridTile previewTile;
+
+
+    public MovementState State { get; private set; }
+        = MovementState.None;
+
+public event Action<Unit> OnMovementConfirmed;
+
+
+private void Update()
 {
-    InputManager.Instance.LeftClick += TryMove;
-}
-
-
-private void OnDisable()
-{
-    if (InputManager.Instance != null)
+    if(State == MovementState.Previewing)
     {
-        InputManager.Instance.LeftClick -= TryMove;
-    }
-}
-
-
-    private void TryMove()
-    {
-        Unit unit = selectionManager.SelectedUnit;
-   
-
-
-        if (unit == null)
-            return;
-
-
-        GridTile clickedTile = GetClickedTile();
-
-
-        if (clickedTile == null)
-            return;
-
-
-     if (!movementRange.IsReachable(unit, clickedTile))
-{
-    Debug.Log(
-        $"Cannot move from ({unit.CurrentTile.X},{unit.CurrentTile.Y}) " +
-        $"to ({clickedTile.X},{clickedTile.Y})"
-    );
-
-    return;
-}
-
-
-       unit.MoveTo(clickedTile);
-       selectionManager.DeselectCurrentUnit();
-
-movementRange.ClearMovementRange();
-    }
-
-
-
-    private GridTile GetClickedTile()
-    {
-        Ray ray =
-            Camera.main.ScreenPointToRay(
-                InputManager.Instance.MousePosition
-            );
-
-
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if(Input.GetKeyDown(KeyCode.Return))
         {
-            return hit.collider.GetComponent<GridTile>();
+            ConfirmMove();
+        }
+    }
+}
+    public void BeginMovement(Unit unit)
+    {
+        if(unit == null)
+            return;
+
+
+        if(!unit.CanMove)
+        {
+            Debug.Log("Unit already moved.");
+            return;
         }
 
 
-        return null;
+        movingUnit = unit;
+
+        originalTile = unit.CurrentTile;
+        previewTile = null;
+
+
+        State = MovementState.SelectingDestination;
+
+
+        movementRange.ShowMovementRange(unit);
+
+
+        Debug.Log($"{unit.name} choosing movement");
     }
 
 
 
-    private bool IsNeighbor(GridTile current, GridTile target)
+
+private void PreviewMove(GridTile tile)
+{
+    previewTile = tile;
+
+
+    movingUnit.SetPreviewTile(tile);
+
+
+    movingUnit.transform.position =
+        tile.WorldPosition;
+
+
+    movementRange.ClearMovementRange();
+
+
+    State = MovementState.Previewing;
+
+
+    Debug.Log(
+        $"Preview move to ({tile.X},{tile.Y})"
+    );
+}
+
+
+
+
+public void ConfirmMove()
+{
+    if(State != MovementState.Previewing)
+        return;
+
+
+    movingUnit.MoveTo(previewTile);
+
+
+    State = MovementState.MovementCommitted;
+
+
+    movementRange.ClearMovementRange();
+
+
+    OnMovementConfirmed?.Invoke(movingUnit);
+
+
+    Debug.Log(
+        $"Movement confirmed to ({previewTile.X},{previewTile.Y})"
+    );
+}
+
+
+
+public void CancelMove()
+{
+    if(State != MovementState.Previewing)
+        return;
+
+
+    movingUnit.transform.position =
+        originalTile.WorldPosition;
+
+
+    previewTile = null;
+
+
+    State = MovementState.SelectingDestination;
+
+
+    movementRange.ShowMovementRange(movingUnit);
+
+
+    Debug.Log("Movement cancelled");
+}
+
+public void HandleTileClick(GridTile clickedTile)
+{
+    if (State != MovementState.SelectingDestination)
+        return;
+
+    if (clickedTile == null)
+        return;
+
+    if (!movementRange.IsReachable(movingUnit, clickedTile))
     {
-        if (current == null)
-            return false;
-
-
-        return GridManager.Instance
-            .GetNeighbors(current)
-            .Contains(target);
+        Debug.Log("Invalid movement.");
+        return;
     }
+
+    PreviewMove(clickedTile);
+}
+
 }

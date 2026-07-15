@@ -10,11 +10,16 @@ public class UnitData : ScriptableObject
 
     public GameObject Prefab;
 
+
+
     [Header("Stats")]
     public int MaxHP = 20;
-     public int MovementRange = 5;
-     public int AttackRange = 1;
-    public int Defense = 2;
+    public int MovementRange = 5;
     public int Speed = 5;
-}
 
+
+    [Header("Combat")]
+    public int Attack = 5;
+    public int Defense = 2;
+    public int AttackRange = 1;
+}

@@ -36,13 +36,32 @@ private void HandleClick()
         return;
 
 
+    // MouseSelector routes the click depending on the state.
+  if(UnitActionController.Instance != null)
+{
+    switch(UnitActionController.Instance.State)
+    {
+        case UnitActionState.SelectingAction:
+            break;
+
+        case UnitActionState.Moving:
+            UnitActionController.Instance.TryMove(currentTile);
+            return;
+
+        case UnitActionState.SelectingAttackTarget:
+            UnitActionController.Instance.TryAttack(currentTile);
+            return;
+    }
+}
+
+
+
     Unit unit = currentTile.Occupant;
 
 
     if (unit == null)
     {
         Debug.Log("No unit on this tile.");
-        selectionManager.DeselectCurrentUnit();
         return;
     }
 
