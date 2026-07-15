@@ -218,4 +218,34 @@ public void HandleTileClick(GridTile clickedTile)
     PreviewMove(clickedTile);
 }
 
+public void ResumeMovement()
+{
+    if (movingUnit == null)
+    {
+        movingUnit = UnitActionController.Instance.SelectedUnit;
+    }
+
+    if (movingUnit == null)
+        return;
+
+    if (!movingUnit.CanMove)
+        return;
+
+
+    // Restore movement context
+    originalTile = movingUnit.CurrentTile;
+    previewTile = null;
+
+
+    movementRange.ShowMovementRange(movingUnit);
+
+
+    State = MovementState.SelectingDestination;
+
+
+    Debug.Log(
+        $"{movingUnit.name} returned to movement selection."
+    );
+}
+
 }

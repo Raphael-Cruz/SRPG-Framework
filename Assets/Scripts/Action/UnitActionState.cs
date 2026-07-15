@@ -2,6 +2,8 @@ public enum UnitActionState
 {
     None,
 
+    Selected,
+
     SelectingAction,
 
     Moving,

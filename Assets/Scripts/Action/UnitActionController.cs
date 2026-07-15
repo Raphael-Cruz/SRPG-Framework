@@ -56,8 +56,7 @@ public void BeginUnitTurn(Unit unit)
 
     selectedUnit = unit;
 
-    State = UnitActionState.SelectingAction;
-
+    State = UnitActionState.Selected;
     Debug.Log(
         $"Action selection started for {unit.name}"
     );
@@ -71,7 +70,7 @@ public void BeginUnitTurn(Unit unit)
 
 public void OpenActionSelection()
 {
-    if (selectedUnit == null)
+    if(selectedUnit == null)
         return;
 
 
@@ -85,7 +84,7 @@ public void OpenActionSelection()
 
 
     Debug.Log(
-        $"{selectedUnit.name} returned to action selection."
+        $"{selectedUnit.name} opened action menu."
     );
 }
 
@@ -120,36 +119,80 @@ public void StartMove()
 }
 
 
-
-  public void CancelAction()
+public void CancelAction()
 {
-    bool cancelled = false;
+    // Cancel attack targeting
+    if(State == UnitActionState.SelectingAttackTarget)
+    {
+        bool cancelled = false;
+
+        if(attackController != null)
+        {
+            cancelled |= attackController.CancelAttack();
+        }
+
+
+        if(!cancelled)
+            return;
+
+
+        State = UnitActionState.SelectingAction;
+
+
+        if(actionMenu != null)
+        {
+            actionMenu.Show(selectedUnit);
+        }
+
+
+        Debug.Log("Attack cancelled. Returning to action menu.");
+
+        return;
+    }
+
+
+
+    bool actionCancelled = false;
+
 
     if(movementController != null)
     {
-        cancelled |= movementController.CancelMove();
+        actionCancelled |= movementController.CancelMove();
     }
+
 
     if(attackController != null)
     {
-        cancelled |= attackController.CancelAttack();
+        actionCancelled |= attackController.CancelAttack();
     }
 
-    if (!cancelled)
+
+    // Action menu cancellation
+    if(State == UnitActionState.SelectingAction)
+    {
+        actionCancelled = true;
+    }
+
+
+    if(!actionCancelled)
         return;
 
-    State = UnitActionState.SelectingAction;
 
 
-    if (selectedUnit != null)
+    if(actionMenu != null)
     {
-        actionMenu.Show(selectedUnit);
+        actionMenu.Hide();
     }
+
+
+    State = UnitActionState.Moving;
+
+
+    movementController.ResumeMovement();
+
 
     Debug.Log("Action cancelled");
 }
-
-
 
    public void FinishTurn()
 {
