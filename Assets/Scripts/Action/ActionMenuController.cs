@@ -5,6 +5,8 @@ public class ActionMenuController : MonoBehaviour
     public static ActionMenuController Instance { get; private set; }
 
 
+    [SerializeField] private ActionMenuUI menuUI;
+
     private Unit currentUnit;
 
 
@@ -23,6 +25,7 @@ public class ActionMenuController : MonoBehaviour
 
     public void Show(Unit unit)
     {
+        Debug.Log("ActionMenuController -> Show");
         currentUnit = unit;
 
 
@@ -31,8 +34,7 @@ public class ActionMenuController : MonoBehaviour
         );
 
 
-        // Later:
-        // enable UI buttons here
+        menuUI?.Show(unit);
     }
 
 
@@ -45,8 +47,7 @@ public class ActionMenuController : MonoBehaviour
         Debug.Log("Action menu closed");
 
 
-        // Later:
-        // disable UI buttons here
+        menuUI?.Hide();
     }
 
 

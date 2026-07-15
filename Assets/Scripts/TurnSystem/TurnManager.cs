@@ -90,6 +90,7 @@ public class TurnManager : MonoBehaviour
         unit.SetActiveTurn(true);
 
         OnUnitTurnStarted?.Invoke(unit);
+        Debug.Log("TurnManager -> StartUnitTurn");
 
         if (unit.IsPlayerControlled)
         {

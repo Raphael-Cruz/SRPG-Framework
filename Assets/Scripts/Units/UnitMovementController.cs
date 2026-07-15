@@ -16,14 +16,35 @@ public class UnitMovementController : MonoBehaviour
 public event Action<Unit> OnMovementConfirmed;
 
 
-private void Update()
+// Fired when a tile is previewed (Confirm button should appear) and when
+// that preview ends, whether confirmed or cancelled (Confirm button
+// should disappear). Kept separate from OnMovementConfirmed since a UI
+// button caring "is there a preview to confirm right now" needs to know
+// about cancellation too, not just confirmation.
+public event Action<Unit> OnPreviewStarted;
+public event Action OnPreviewEnded;
+
+
+private void Start()
 {
-    if(State == MovementState.Previewing)
+    InputManager.Instance.ConfirmPressed += HandleConfirmPressed;
+}
+
+
+private void OnDisable()
+{
+    if (InputManager.Instance != null)
     {
-        if(Input.GetKeyDown(KeyCode.Return))
-        {
-            ConfirmMove();
-        }
+        InputManager.Instance.ConfirmPressed -= HandleConfirmPressed;
+    }
+}
+
+
+private void HandleConfirmPressed()
+{
+    if (State == MovementState.Previewing)
+    {
+        ConfirmMove();
     }
 }
     public void BeginMovement(Unit unit)
@@ -73,6 +94,10 @@ private void PreviewMove(GridTile tile)
 
 
     State = MovementState.Previewing;
+      Debug.Log("Invoking Preview Started");
+
+
+    OnPreviewStarted?.Invoke(movingUnit);
 
 
     Debug.Log(
@@ -91,32 +116,44 @@ public void ConfirmMove()
 
     movingUnit.MoveTo(previewTile);
 
-
-    State = MovementState.MovementCommitted;
+    movingUnit.ClearPreviewTile();
 
 
     movementRange.ClearMovementRange();
 
 
-    OnMovementConfirmed?.Invoke(movingUnit);
-
-
     Debug.Log(
         $"Movement confirmed to ({previewTile.X},{previewTile.Y})"
     );
+
+Debug.Log("UnitMovementController -> ConfirmMove");
+    OnMovementConfirmed?.Invoke(movingUnit);
+
+    OnPreviewEnded?.Invoke();
+
+
+    // Without this, State stays MovementCommitted forever and future code
+    // has to remember that "MovementCommitted" actually means "idle".
+    movingUnit = null;
+    previewTile = null;
+    originalTile = null;
+
+    State = MovementState.None;
 }
 
 
 
-public void CancelMove()
+public bool CancelMove()
 {
     if(State != MovementState.Previewing)
-        return;
+        return false;
 
 
     movingUnit.transform.position =
         originalTile.WorldPosition;
 
+
+    movingUnit.ClearPreviewTile();
 
     previewTile = null;
 
@@ -128,6 +165,10 @@ public void CancelMove()
 
 
     Debug.Log("Movement cancelled");
+
+    OnPreviewEnded?.Invoke();
+
+    return true;
 }
 
 public void HandleTileClick(GridTile clickedTile)

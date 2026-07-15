@@ -20,6 +20,7 @@ public class SelectionManager : MonoBehaviour
 
     public void SelectUnit(Unit unit)
     {
+        Debug.Log("SelectionManager -> SelectUnit");
         if (unit == null)
             return;
 

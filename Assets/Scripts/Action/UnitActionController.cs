@@ -38,22 +38,21 @@ private void Start()
 {
     movementController.OnMovementConfirmed += HandleMovementConfirmed;
     attackController.OnAttackConfirmed += HandleAttackConfirmed;
+
+    InputManager.Instance.CancelPressed += HandleCancelPressed;
 }
 
-private void Update()
+private void HandleCancelPressed()
 {
     if(selectedUnit == null)
         return;
 
-
-    if(Input.GetKeyDown(KeyCode.Escape))
-    {
-        CancelAction();
-    }
+    CancelAction();
 }
 
 public void BeginUnitTurn(Unit unit)
 {
+    Debug.Log("UnitActionController -> BeginUnitTurn");
     selectedUnit = unit;
 
     State = UnitActionState.SelectingAction;
@@ -85,6 +84,11 @@ public void StartMove()
     State = UnitActionState.Moving;
 
 
+    // Hide the menu while the player is choosing a destination tile;
+    // HandleMovementConfirmed() re-shows it once the move is committed.
+    actionMenu.Hide();
+
+
     movementController.BeginMovement(selectedUnit);
 
 
@@ -97,18 +101,28 @@ public void StartMove()
 
   public void CancelAction()
 {
+    bool cancelled = false;
+
     if(movementController != null)
     {
-        movementController.CancelMove();
-            
+        cancelled |= movementController.CancelMove();
     }
 
     if(attackController != null)
     {
-        attackController.CancelAttack();
+        cancelled |= attackController.CancelAttack();
     }
 
+    if (!cancelled)
+        return;
+
     State = UnitActionState.SelectingAction;
+
+
+    if (selectedUnit != null)
+    {
+        actionMenu.Show(selectedUnit);
+    }
 
     Debug.Log("Action cancelled");
 }
@@ -121,6 +135,10 @@ public void StartMove()
         return;
 
     State = UnitActionState.Finished;
+
+
+    actionMenu.Hide();
+
 
     TurnManager.Instance.EndTurn(selectedUnit);
 }
@@ -135,6 +153,11 @@ private void OnDestroy()
     if(attackController != null)
     {
         attackController.OnAttackConfirmed -= HandleAttackConfirmed;
+    }
+
+    if(InputManager.Instance != null)
+    {
+        InputManager.Instance.CancelPressed -= HandleCancelPressed;
     }
 }
 
@@ -162,6 +185,12 @@ public void StartAttack()
     State = UnitActionState.SelectingAttackTarget;
 
 
+    // Hide the menu while the player is picking a target;
+    // HandleAttackConfirmed() -> CheckRemainingActions() re-shows it if
+    // the unit can still do something this turn.
+    actionMenu.Hide();
+
+
     attackController.BeginAttack(selectedUnit);
 }
 
@@ -181,9 +210,9 @@ private void HandleMovementConfirmed(Unit unit)
     State = UnitActionState.SelectingAction;
 
 
-    ActionMenuController.Instance.Show(unit);
+    actionMenu.Show(unit);
 
-
+Debug.Log("UnitActionController -> HandleMovementConfirmed");
     Debug.Log(
         $"{unit.name} finished moving. Choose next action."
     );
@@ -200,7 +229,7 @@ private void CheckRemainingActions(Unit unit)
     {
         State = UnitActionState.SelectingAction;
 
-        ActionMenuController.Instance.Show(unit);
+        actionMenu.Show(unit);
 
         Debug.Log(
             $"{unit.name} still has actions."

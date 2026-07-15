@@ -9,6 +9,8 @@ public class UnitAttackController : MonoBehaviour
 
     private Unit attackingUnit;
 
+    public AttackState State { get; private set; } = AttackState.None;
+
 
     public event Action<Unit> OnAttackConfirmed;
 
@@ -21,6 +23,8 @@ public class UnitAttackController : MonoBehaviour
     public void BeginAttack(Unit unit)
     {
         attackingUnit = unit;
+
+        State = AttackState.SelectingTarget;
 
         attackRange.ShowAttackRange(unit);
 
@@ -45,16 +49,23 @@ public class UnitAttackController : MonoBehaviour
         );
 
 
-        OnAttackConfirmed?.Invoke(attackingUnit);
+        Unit attacker = attackingUnit;
 
 
         attackingUnit = null;
+        State = AttackState.None;
+
+
+        OnAttackConfirmed?.Invoke(attacker);
     }
 
 
 
 public void TryAttack(GridTile tile)
 {
+    if(State != AttackState.SelectingTarget)
+        return;
+
     if(attackingUnit == null)
         return;
 
@@ -83,8 +94,24 @@ public void TryAttack(GridTile tile)
 
     ConfirmAttack(target);
 }
-public void CancelAttack()
+
+
+// Returns true if an in-progress target selection was actually
+// cancelled, false if there was nothing to cancel (already idle) - lets
+// UnitActionController.CancelAction() tell "something was cancelled"
+// apart from "Escape was pressed while nothing was happening".
+public bool CancelAttack()
 {
+    if(State != AttackState.SelectingTarget)
+        return false;
+
     attackRange.ClearAttackRange();
+
+    attackingUnit = null;
+    State = AttackState.None;
+
+    Debug.Log("Attack cancelled");
+
+    return true;
 }
 }
