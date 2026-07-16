@@ -8,7 +8,8 @@ public class UnitAttackController : MonoBehaviour
 
 
     private Unit attackingUnit;
-
+    private CombatPrediction currentPrediction;
+    private Unit targetUnit;
     public AttackState State { get; private set; } = AttackState.None;
 
 
@@ -16,7 +17,7 @@ public class UnitAttackController : MonoBehaviour
 
 
 
-    
+    public Unit CurrentTarget => targetUnit;
 
 
 
@@ -38,26 +39,37 @@ public class UnitAttackController : MonoBehaviour
 
 
 
-    private void ConfirmAttack(Unit target)
+private void ExecuteAttack(Unit target)
+{
+    attackRange.ClearAttackRange();
+
+
+    if(CombatPreviewController.Instance != null)
     {
-        attackRange.ClearAttackRange();
-
-
-        CombatSystem.Instance.Attack(
-            attackingUnit,
-            target
-        );
-
-
-        Unit attacker = attackingUnit;
-
-
-        attackingUnit = null;
-        State = AttackState.None;
-
-
-        OnAttackConfirmed?.Invoke(attacker);
+        currentPrediction =
+            CombatPreviewController.Instance.PreviewAttack(
+                attackingUnit,
+                target
+            );
     }
+
+
+    CombatSystem.Instance.Attack(
+        attackingUnit,
+        target
+    );
+    ClearTargetPreview();
+
+
+    Unit attacker = attackingUnit;
+
+
+    attackingUnit = null;
+    State = AttackState.None;
+
+
+    OnAttackConfirmed?.Invoke(attacker);
+}
 
 
 
@@ -92,7 +104,8 @@ public void TryAttack(GridTile tile)
         return;
     }
 
-    ConfirmAttack(target);
+    targetUnit = target;
+    Debug.Log($"Target selected: {target.name}");
 }
 
 
@@ -105,6 +118,8 @@ public bool CancelAttack()
     if(State != AttackState.SelectingTarget)
         return false;
 
+    ClearTargetPreview();
+
     attackRange.ClearAttackRange();
 
     attackingUnit = null;
@@ -114,4 +129,71 @@ public bool CancelAttack()
 
     return true;
 }
+
+public void HoverTarget(GridTile tile)
+{
+    if(State != AttackState.SelectingTarget)
+        return;
+
+
+    ClearTargetPreview();
+
+
+    if(tile == null)
+        return;
+
+
+    Unit target = tile.Occupant;
+
+
+    if(target == null)
+        return;
+
+
+    if(target.Team == attackingUnit.Team)
+        return;
+
+
+    if(!attackRange.IsInAttackRange(tile))
+        return;
+
+
+    targetUnit = target;
+
+
+    targetUnit.Visual.SetHoveredTarget(true);
+
+
+    if(CombatPreviewController.Instance != null)
+    {
+        currentPrediction =
+            CombatPreviewController.Instance.PreviewAttack(
+                attackingUnit,
+                targetUnit
+            );
+    }
+}
+public void ConfirmCurrentTarget()
+{
+    if(State != AttackState.SelectingTarget)
+        return;
+
+    if(targetUnit == null)
+        return;
+
+    ExecuteAttack(targetUnit);
+}
+private void ClearTargetPreview()
+{
+    if(targetUnit != null)
+    {
+        targetUnit.Visual.SetHoveredTarget(false);
+    }
+
+    targetUnit = null;
+    currentPrediction = null;
+
+    CombatPreviewController.Instance?.ClearPreview();
+}
+
 }

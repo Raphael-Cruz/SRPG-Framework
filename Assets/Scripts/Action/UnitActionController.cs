@@ -40,6 +40,18 @@ private void Start()
     attackController.OnAttackConfirmed += HandleAttackConfirmed;
 
     InputManager.Instance.CancelPressed += HandleCancelPressed;
+    InputManager.Instance.ConfirmPressed += HandleConfirmPressed;
+}
+
+private void HandleConfirmPressed()
+{
+    if (selectedUnit == null)
+        return;
+
+    if (State == UnitActionState.SelectingAttackTarget)
+    {
+        attackController.ConfirmCurrentTarget();
+    }
 }
 
 private void HandleCancelPressed()
@@ -220,10 +232,10 @@ private void OnDestroy()
         attackController.OnAttackConfirmed -= HandleAttackConfirmed;
     }
 
-    if(InputManager.Instance != null)
-    {
-        InputManager.Instance.CancelPressed -= HandleCancelPressed;
-    }
+ if(InputManager.Instance != null)
+{
+    InputManager.Instance.CancelPressed -= HandleCancelPressed;
+}
 }
 
 
@@ -319,6 +331,11 @@ private void CheckRemainingActions(Unit unit)
     State = UnitActionState.SelectingAction;
 
     actionMenu.Show(unit);
+}
+
+public void HoverAttackTarget(GridTile tile)
+{
+    attackController.HoverTarget(tile);
 }
 
 }

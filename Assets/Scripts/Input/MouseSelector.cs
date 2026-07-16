@@ -112,6 +112,13 @@ public class MouseSelector : MonoBehaviour
         currentTile = tile;
 
         HoveredTileChanged?.Invoke(currentTile);
+       
+        if(UnitActionController.Instance != null &&
+            UnitActionController.Instance.State ==
+            UnitActionState.SelectingAttackTarget)
+            {
+                UnitActionController.Instance.HoverAttackTarget(currentTile);
+            }
     }
 
 

@@ -2,13 +2,8 @@ using UnityEngine;
 
 // Handles a unit's on-model visual feedback: selection highlight and the
 // "already spent this turn" dimmed/desaturated look.
-//
-// NOTE: this file wasn't part of the shared project files, so this is a
-// best-effort reconstruction based on how Unit.cs and SelectionManager.cs
-// already call Visual.Select() / Visual.Deselect(). If a UnitVisual.cs
-// already exists in the actual project, just add the SetExhausted(bool)
-// method (and the fields/UpdateVisual pattern it relies on) to that file
-// instead of using this one.
+
+
 public class UnitVisual : MonoBehaviour
 {
     [Header("Rendering")]
@@ -35,6 +30,15 @@ public class UnitVisual : MonoBehaviour
 
     [Range(0f, 1f)]
     [SerializeField] private float activeTurnStrength = 0.3f;
+    private bool isHoveredTarget;
+
+
+    [SerializeField]
+    private Color hoverTargetColor = Color.red;
+
+
+    [SerializeField]
+    private float hoverTargetStrength = 0.5f;
 
     private Color baseColor;
     private bool isSelected;
@@ -116,7 +120,15 @@ public class UnitVisual : MonoBehaviour
         {
             color = Color.Lerp(color, selectionColor, selectionStrength);
         }
-
+        
+        if(isHoveredTarget)
+        {
+            color = Color.Lerp(
+                color,
+                hoverTargetColor,
+                hoverTargetStrength
+            );
+}
         targetRenderer.material.color = color;
     }
 
@@ -132,4 +144,10 @@ public class UnitVisual : MonoBehaviour
 
         return blended;
     }
+
+    public void SetHoveredTarget(bool value)
+{
+    isHoveredTarget = value;
+    UpdateVisual();
+}
 }

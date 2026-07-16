@@ -1,5 +1,6 @@
 public enum AttackState
 {
     None,
-    SelectingTarget
+    SelectingTarget,
+    PreviewingAttack
 }
