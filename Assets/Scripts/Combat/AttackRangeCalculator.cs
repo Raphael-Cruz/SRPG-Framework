@@ -7,6 +7,8 @@ public class AttackRangeCalculator : MonoBehaviour
 {
     private readonly List<GridTile> currentRange = new List<GridTile>();
 
+    public IReadOnlyList<GridTile> CurrentRange => currentRange;
+
 
     public void ShowAttackRange(Unit unit)
     {

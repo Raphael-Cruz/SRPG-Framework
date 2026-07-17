@@ -14,6 +14,7 @@ public class GridManager : MonoBehaviour
     public static GridManager Instance { get; private set; }
 
 
+
     private GridTile[,] grid;
 
 public int Width => width;
@@ -138,6 +139,17 @@ private void AddNeighbor(
     if(tile != null)
     {
         neighbors.Add(tile);
+    }
+}
+
+public IEnumerable<GridTile> GetAllTiles()
+{
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            yield return grid[x, y];
+        }
     }
 }
 

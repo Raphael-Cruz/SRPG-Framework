@@ -5,6 +5,9 @@ public class UnitAttackController : MonoBehaviour
 {
     [SerializeField]
     private AttackRangeCalculator attackRange;
+    
+[SerializeField]
+private AttackTargetSelector targetSelector;
 
 
     private Unit attackingUnit;
@@ -20,14 +23,18 @@ public class UnitAttackController : MonoBehaviour
     public Unit CurrentTarget => targetUnit;
 
 
-
     public void BeginAttack(Unit unit)
     {
         attackingUnit = unit;
 
         State = AttackState.SelectingTarget;
 
-        attackRange.ShowAttackRange(unit);
+   attackRange.ShowAttackRange(unit);
+
+        targetSelector.BuildTargetList(
+            unit,
+            attackRange.CurrentRange
+        );
 
 
         Debug.Log(
@@ -39,34 +46,33 @@ public class UnitAttackController : MonoBehaviour
 
 
 
-private void ExecuteAttack(Unit target)
+private void ExecuteAttack()
 {
+    if (targetUnit == null)
+        return;
+
     attackRange.ClearAttackRange();
 
-
-    if(CombatPreviewController.Instance != null)
+    if (CombatPreviewController.Instance != null)
     {
         currentPrediction =
             CombatPreviewController.Instance.PreviewAttack(
                 attackingUnit,
-                target
+                targetUnit
             );
     }
 
-
     CombatSystem.Instance.Attack(
         attackingUnit,
-        target
+        targetUnit
     );
-    ClearTargetPreview();
 
+    ClearTargetPreview();
 
     Unit attacker = attackingUnit;
 
-
     attackingUnit = null;
     State = AttackState.None;
-
 
     OnAttackConfirmed?.Invoke(attacker);
 }
@@ -84,28 +90,32 @@ public void TryAttack(GridTile tile)
     if(tile == null)
         return;
 
-    Unit target = tile.Occupant;
+   Unit target = tile.Occupant;
 
-    if(target == null)
-    {
-        Debug.Log("No target.");
-        return;
-    }
+if(target == null)
+{
+    Debug.Log("No target.");
+    return;
+}
 
-    if(target.Team == attackingUnit.Team)
-    {
-        Debug.Log("Cannot attack ally.");
-        return;
-    }
 
-    if(!attackRange.IsInAttackRange(tile))
-    {
-        Debug.Log("Target out of range.");
-        return;
-    }
+if(!targetSelector.IsValidTarget(target))
+{
+    Debug.Log("Invalid attack target.");
+    return;
+}
 
-    targetUnit = target;
-    Debug.Log($"Target selected: {target.name}");
+
+targetSelector.SetTarget(target);
+
+targetUnit = target;
+
+
+Debug.Log(
+    $"Target selected: {target.name}"
+);
+
+ExecuteAttack();
 }
 
 
@@ -130,13 +140,10 @@ public bool CancelAttack()
     return true;
 }
 
-public void HoverTarget(GridTile tile)
+public void ChangeTarget(GridTile tile)
 {
     if(State != AttackState.SelectingTarget)
         return;
-
-
-    ClearTargetPreview();
 
 
     if(tile == null)
@@ -158,10 +165,21 @@ public void HoverTarget(GridTile tile)
         return;
 
 
+
+    // Same target, don't rebuild preview
+    if(targetUnit == target)
+        return;
+
+
+
+    ClearTargetPreview();
+
+
     targetUnit = target;
 
 
     targetUnit.Visual.SetHoveredTarget(true);
+
 
 
     if(CombatPreviewController.Instance != null)
@@ -173,15 +191,42 @@ public void HoverTarget(GridTile tile)
             );
     }
 }
+
+public bool IsValidAttackTile(GridTile tile)
+{
+    if(tile == null)
+        return false;
+
+
+    Unit target = tile.Occupant;
+
+
+    if(target == null)
+        return false;
+
+
+    if(target.Team == attackingUnit.Team)
+        return false;
+
+
+    return attackRange.IsInAttackRange(tile);
+}
+
+
 public void ConfirmCurrentTarget()
 {
     if(State != AttackState.SelectingTarget)
         return;
 
-    if(targetUnit == null)
-        return;
 
-    ExecuteAttack(targetUnit);
+    if(targetUnit == null)
+    {
+        Debug.Log("No attack target selected.");
+        return;
+    }
+
+
+    ExecuteAttack();
 }
 private void ClearTargetPreview()
 {
@@ -194,6 +239,26 @@ private void ClearTargetPreview()
     currentPrediction = null;
 
     CombatPreviewController.Instance?.ClearPreview();
+}
+
+public bool CanHoverTarget(GridTile tile)
+{
+    if(tile == null)
+        return false;
+
+
+    Unit target = tile.Occupant;
+
+
+    if(target == null)
+        return false;
+
+
+    if(targetUnit == target)
+        return true;
+
+
+    return targetSelector.IsValidTarget(target);
 }
 
 }

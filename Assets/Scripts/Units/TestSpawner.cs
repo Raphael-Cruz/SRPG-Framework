@@ -12,6 +12,7 @@ public class UnitSpawnerTest : MonoBehaviour
     SpawnUnit(knightPrefab, 0, 0);
     SpawnUnit(knightPrefab, 0, 4);
     SpawnUnit(enemyPrefab, 0, 1);
+      SpawnUnit(enemyPrefab, 1, 0);
 
 
     BattleManager.Instance.StartBattle();

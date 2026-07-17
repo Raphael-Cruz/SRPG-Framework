@@ -40,19 +40,21 @@ private void Start()
     attackController.OnAttackConfirmed += HandleAttackConfirmed;
 
     InputManager.Instance.CancelPressed += HandleCancelPressed;
-    InputManager.Instance.ConfirmPressed += HandleConfirmPressed;
-}
 
-private void HandleConfirmPressed()
-{
-    if (selectedUnit == null)
-        return;
-
-    if (State == UnitActionState.SelectingAttackTarget)
-    {
-        attackController.ConfirmCurrentTarget();
-    }
 }
+// this function was being used to select the target before attacking instead of
+// 1 click and attack - maybe i can reuse once i set the joystick
+//
+//private void HandleConfirmPressed()
+//{
+//    if (selectedUnit == null)
+//        return;
+//
+//    if (State == UnitActionState.SelectingAttackTarget)
+//    {
+//        attackController.ConfirmCurrentTarget();
+//    }
+//}
 
 private void HandleCancelPressed()
 {
@@ -333,9 +335,15 @@ private void CheckRemainingActions(Unit unit)
     actionMenu.Show(unit);
 }
 
-public void HoverAttackTarget(GridTile tile)
+public void ChangeAttackTarget(GridTile tile)
 {
-    attackController.HoverTarget(tile);
+    attackController.ChangeTarget(tile);
 }
+
+public void ConfirmAttackTarget()
+{
+    attackController.ConfirmCurrentTarget();
+}
+
 
 }

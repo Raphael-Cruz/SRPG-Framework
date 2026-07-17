@@ -6,6 +6,7 @@ public class TacticalCursor : MonoBehaviour
 
     [SerializeField] private TileMarkerController tileMarker;
     [SerializeField] private ArrowController arrow;
+    [SerializeField] private UnitAttackController attackController;
 
     private void OnEnable()
     {
@@ -18,12 +19,21 @@ public class TacticalCursor : MonoBehaviour
             mouseSelector.HoveredTileChanged -= HandleHoveredTileChanged;
     }
 
-    private void HandleHoveredTileChanged(GridTile tile)
-    {
-        if (tile == null)
-            return;
+private void HandleHoveredTileChanged(GridTile tile)
+{
+    if(tile == null)
+        return;
 
-        tileMarker.SetTarget(tile);
-        arrow.SetTarget(tile);
+
+    if(UnitActionController.Instance.State ==
+       UnitActionState.SelectingAttackTarget)
+    {
+        if(!attackController.CanHoverTarget(tile))
+            return;
     }
+
+
+    tileMarker.SetTarget(tile);
+    arrow.SetTarget(tile);
+}
 }

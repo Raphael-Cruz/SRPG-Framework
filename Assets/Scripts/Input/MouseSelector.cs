@@ -49,12 +49,11 @@ public class MouseSelector : MonoBehaviour
         // ==============================
         // Attack targeting has priority
         // ==============================
-        if (UnitActionController.Instance != null &&
-            UnitActionController.Instance.State == UnitActionState.SelectingAttackTarget)
-        {
-            UnitActionController.Instance.TryAttack(currentTile);
-            return;
-        }
+      if(UnitActionController.Instance.State == UnitActionState.SelectingAttackTarget)
+{
+    UnitActionController.Instance.ConfirmAttackTarget();
+    return;
+}
 
 
 
@@ -117,7 +116,7 @@ public class MouseSelector : MonoBehaviour
             UnitActionController.Instance.State ==
             UnitActionState.SelectingAttackTarget)
             {
-                UnitActionController.Instance.HoverAttackTarget(currentTile);
+            UnitActionController.Instance.ChangeAttackTarget(currentTile);
             }
     }
 
