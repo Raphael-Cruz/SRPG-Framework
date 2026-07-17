@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 
@@ -12,6 +13,8 @@ public class CombatPreviewController : MonoBehaviour
 
     public CombatPrediction CurrentPrediction { get; private set; }
 
+[SerializeField]
+private CombatPreviewUI previewUI;
 
 
     private void Awake()
@@ -21,6 +24,8 @@ public class CombatPreviewController : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        
 
         Instance = this;
 
@@ -75,6 +80,10 @@ public CombatPrediction PreviewAttack(
         simulator.Simulate(
             context
         );
+        previewUI.Show(
+    attacker,
+    target,
+    CurrentPrediction);
 
 
     Debug.Log(
@@ -89,5 +98,7 @@ public CombatPrediction PreviewAttack(
     public void ClearPreview()
     {
         CurrentPrediction = null;
-    }
+
+        previewUI.Hide();
+            }
 }

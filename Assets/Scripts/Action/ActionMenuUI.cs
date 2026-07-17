@@ -11,6 +11,7 @@ public class ActionMenuUI : MonoBehaviour
 {
     [Tooltip("The panel that gets shown/hidden as a whole. Defaults to this GameObject if left empty.")]
     [SerializeField] private GameObject panelRoot;
+      [SerializeField] private GameObject cogPanelRoot;
 
     [SerializeField] private Button moveButton;
     [SerializeField] private Button attackButton;
@@ -25,8 +26,13 @@ public class ActionMenuUI : MonoBehaviour
         {
             panelRoot = gameObject;
         }
+         if (cogPanelRoot == null)
+        {
+            cogPanelRoot = gameObject;
+        }
 
         panelRoot.SetActive(false);
+        cogPanelRoot.SetActive(false);
 
         // Buttons call back into ActionMenuController rather than
         // UnitActionController directly, so ActionMenuController remains
@@ -53,6 +59,7 @@ public class ActionMenuUI : MonoBehaviour
         currentUnit = unit;
 
         panelRoot.SetActive(true);
+        cogPanelRoot.SetActive(true);
 
         RefreshAvailability();
         FocusFirstAvailableButton();
@@ -64,6 +71,7 @@ public class ActionMenuUI : MonoBehaviour
         currentUnit = null;
 
         panelRoot.SetActive(false);
+        cogPanelRoot.SetActive(false);
 
         ClearFocusIfOwnedByThisMenu();
     }
