@@ -56,24 +56,15 @@ public CombatPrediction PreviewAttack(
     }
 
 
-    int baseDamage =
-        Mathf.Max(
-            attacker.Data.Attack -
-            target.Data.Defense,
-            1
-        );
-
-
-    float baseHitChance = 100f;
-
-
-    CombatContext context =
-        new CombatContext(
-            attacker,
-            target,
-            baseDamage,
-            baseHitChance
-        );
+ CombatContext context =
+    new CombatContext(
+        attacker,
+        target,
+        attacker.Data.Attack,
+        target.Data.Defense,
+        attacker.Data.Accuracy,
+        target.Data.Avoid
+    );
 
 
     CurrentPrediction =

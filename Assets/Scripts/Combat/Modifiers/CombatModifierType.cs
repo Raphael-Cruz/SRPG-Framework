@@ -8,5 +8,9 @@ public enum CombatModifierType
 
     Defense,
 
-    Range
+    Range,
+    Attack,
+
+Accuracy,
+Avoid
 }

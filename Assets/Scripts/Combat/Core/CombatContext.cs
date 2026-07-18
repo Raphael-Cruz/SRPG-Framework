@@ -2,24 +2,33 @@ using UnityEngine;
 
 public class CombatContext
 {
-    public int BaseDamage { get; private set; }
+    public Unit Attacker { get; }
 
-public float BaseHitChance { get; private set; }
+    public Unit Defender { get; }
 
-    public Unit Attacker { get; private set; }
-    public Unit Defender { get; private set; }
+    public int Attack { get; }
 
-public CombatContext(
-    Unit attacker,
-    Unit defender,
-    int baseDamage,
-    float baseHitChance
-)
-{
-    Attacker = attacker;
-    Defender = defender;
+    public int Defense { get; }
 
-    BaseDamage = baseDamage;
-    BaseHitChance = baseHitChance;
-}
+    public int Accuracy { get; }
+
+    public int Avoid { get; }
+
+    public CombatContext(
+        Unit attacker,
+        Unit defender,
+        int attack,
+        int defense,
+        int accuracy,
+        int avoid)
+    {
+        Attacker = attacker;
+        Defender = defender;
+
+        Attack = attack;
+        Defense = defense;
+
+        Accuracy = accuracy;
+        Avoid = avoid;
+    }
 }

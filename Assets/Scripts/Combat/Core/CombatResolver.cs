@@ -1,52 +1,82 @@
 using System.Collections.Generic;
-
+using UnityEngine;
 
 public class CombatResolver
 {
     public CombatPrediction Resolve(
-        int baseDamage,
-        float baseHitChance,
-        List<CombatModifier> modifiers
-    )
+        CombatContext context,
+        List<CombatModifier> modifiers)
     {
-        int finalDamage = baseDamage;
-        float finalHitChance = baseHitChance;
+        int finalAttack = context.Attack;
+        int finalDefense = context.Defense;
 
+        int finalAccuracy = context.Accuracy;
+        int finalAvoid = context.Avoid;
 
         foreach (CombatModifier modifier in modifiers)
         {
             ApplyModifier(
                 modifier,
-                ref finalDamage,
-                ref finalHitChance
+                ref finalAttack,
+                ref finalDefense,
+                ref finalAccuracy,
+                ref finalAvoid
             );
         }
 
+        int finalDamage = Mathf.Max(
+            finalAttack - finalDefense,
+            1
+        );
+
+        int finalHitChance = Mathf.Clamp(
+            finalAccuracy - finalAvoid,
+            0,
+            100
+        );
 
         return new CombatPrediction(
             true,
+            finalAttack,
+            finalDefense,
             finalDamage,
+            finalAccuracy,
+            finalAvoid,
             finalHitChance
         );
     }
 
-
-
     private void ApplyModifier(
         CombatModifier modifier,
-        ref int damage,
-        ref float hitChance
-    )
+        ref int attack,
+        ref int defense,
+        ref int accuracy,
+        ref int avoid)
     {
-        switch(modifier.Type)
+        switch (modifier.Type)
         {
-            case CombatModifierType.Damage:
-                damage += (int)modifier.Value;
+            case CombatModifierType.Attack:
+                attack += Mathf.RoundToInt(modifier.Value);
                 break;
 
+            case CombatModifierType.Defense:
+                defense += Mathf.RoundToInt(modifier.Value);
+                break;
+
+            case CombatModifierType.Accuracy:
+                accuracy += Mathf.RoundToInt(modifier.Value);
+                break;
+
+            case CombatModifierType.Avoid:
+                avoid += Mathf.RoundToInt(modifier.Value);
+                break;
+
+            case CombatModifierType.Damage:
+                attack += Mathf.RoundToInt(modifier.Value);
+                break;
 
             case CombatModifierType.HitChance:
-                hitChance += modifier.Value;
+                accuracy += Mathf.RoundToInt(modifier.Value);
                 break;
         }
     }

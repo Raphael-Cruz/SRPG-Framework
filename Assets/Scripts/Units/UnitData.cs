@@ -18,8 +18,12 @@ public class UnitData : ScriptableObject
     public int Speed = 5;
 
 
-    [Header("Combat")]
-    public int Attack = 5;
-    public int Defense = 2;
-    public int AttackRange = 1;
+[Header("Combat")]
+public int Attack = 5;
+public int Defense = 2;
+
+public int Accuracy = 100;
+public int Avoid = 0;
+
+public int AttackRange = 1;
 }

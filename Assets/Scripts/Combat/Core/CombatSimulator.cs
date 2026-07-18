@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 
-
 public class CombatSimulator
 {
     private readonly List<ICombatFactProvider> factProviders;
@@ -8,33 +7,24 @@ public class CombatSimulator
 
     private readonly CombatResolver resolver;
 
-
-
     public CombatSimulator(
         List<ICombatFactProvider> factProviders,
         List<ICombatEvaluator> evaluators,
-        CombatResolver resolver
-    )
+        CombatResolver resolver)
     {
         this.factProviders = factProviders;
         this.evaluators = evaluators;
         this.resolver = resolver;
     }
 
-
-
- public CombatPrediction Simulate(
-    CombatContext context
-)
+    public CombatPrediction Simulate(
+        CombatContext context)
     {
         CombatFacts facts = new CombatFacts();
 
-
-
         // Step 1:
         // Gather information about the battlefield.
-
-        foreach(ICombatFactProvider provider in factProviders)
+        foreach (ICombatFactProvider provider in factProviders)
         {
             provider.ProvideFacts(
                 context,
@@ -42,16 +32,12 @@ public class CombatSimulator
             );
         }
 
-
-
         // Step 2:
         // Convert facts into gameplay modifiers.
-
         List<CombatModifier> modifiers =
             new List<CombatModifier>();
 
-
-        foreach(ICombatEvaluator evaluator in evaluators)
+        foreach (ICombatEvaluator evaluator in evaluators)
         {
             CombatModifier modifier =
                 evaluator.Evaluate(
@@ -59,22 +45,17 @@ public class CombatSimulator
                     facts
                 );
 
-
-            if(modifier != null)
+            if (modifier != null)
             {
                 modifiers.Add(modifier);
             }
         }
 
-
-
         // Step 3:
         // Produce the predicted outcome.
-
-     return resolver.Resolve(
-    context.BaseDamage,
-    context.BaseHitChance,
-    modifiers
+        return resolver.Resolve(
+            context,
+            modifiers
         );
     }
 }
