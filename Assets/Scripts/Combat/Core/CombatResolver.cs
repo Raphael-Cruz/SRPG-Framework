@@ -35,15 +35,44 @@ public class CombatResolver
             100
         );
 
-        return new CombatPrediction(
-            true,
-            finalAttack,
-            finalDefense,
-            finalDamage,
-            finalAccuracy,
-            finalAvoid,
-            finalHitChance
-        );
+        // -------------------------
+        // HP Prediction
+        // -------------------------
+
+HPGaugeState attackerGauge =
+    new HPGaugeState(
+        context.Attacker.CurrentHP,
+        context.Attacker.Data.MaxHP,
+        0
+    );
+
+
+HPGaugeState defenderGauge =
+    new HPGaugeState(
+        context.Defender.CurrentHP,
+        context.Defender.Data.MaxHP,
+        finalDamage
+    );
+
+        CombatPrediction prediction =
+            new CombatPrediction(
+                true,
+                finalAttack,
+                finalDefense,
+                finalDamage,
+                finalAccuracy,
+                finalAvoid,
+                finalHitChance,
+                attackerGauge,
+                defenderGauge
+            );
+
+        foreach (CombatModifier modifier in modifiers)
+        {
+            prediction.AddModifier(modifier);
+        }
+
+        return prediction;
     }
 
     private void ApplyModifier(

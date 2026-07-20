@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: EnemyKnight
   m_EditorClassIdentifier: 
   UnitName: Knight
-  Portrait: {fileID: 0}
+  Portrait: {fileID: 21300000, guid: 3c62492d1b1d9f445abe149bf00c0ab7, type: 3}
   Prefab: {fileID: 4259564464024163283, guid: e8f0bcc81c6b0cc4e8c530ab51de6ce8, type: 3}
-  IsPlayerControlled: 0
   MaxHP: 20
   MovementRange: 4
   Speed: 5
   Attack: 5
   Defense: 4
+  Accuracy: 100
+  Avoid: 0
   AttackRange: 1

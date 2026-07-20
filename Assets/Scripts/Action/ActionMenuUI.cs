@@ -11,8 +11,8 @@ public class ActionMenuUI : MonoBehaviour
 {
     [Tooltip("The panel that gets shown/hidden as a whole. Defaults to this GameObject if left empty.")]
     [SerializeField] private GameObject panelRoot;
-      [SerializeField] private GameObject cogPanelRoot;
-
+      [SerializeField] public GameObject cogPanelRoot;
+   
     [SerializeField] private Button moveButton;
     [SerializeField] private Button attackButton;
     [SerializeField] private Button waitButton;
@@ -36,8 +36,7 @@ public class ActionMenuUI : MonoBehaviour
 
         // Buttons call back into ActionMenuController rather than
         // UnitActionController directly, so ActionMenuController remains
-        // the one place other systems (and previously ActionMenuTester)
-        // integrate with.
+        // the one place other systems integrate with.
         moveButton.onClick.AddListener(() => ActionMenuController.Instance.SelectMove());
         attackButton.onClick.AddListener(() => ActionMenuController.Instance.SelectAttack());
         waitButton.onClick.AddListener(() => ActionMenuController.Instance.SelectWait());

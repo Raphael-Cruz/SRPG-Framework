@@ -1579,8 +1579,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be3f1b643367ab84ca26d8beca242ef6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  data: {fileID: 11400000, guid: 411199b5dde45f54180dc27f68e8b379, type: 2}
+  data: {fileID: 11400000, guid: a7dc94266962fa144bcbb3675071b713, type: 2}
   currentHP: 0
+  team: 0
 --- !u!114 &4758877622796511408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1598,6 +1599,10 @@ MonoBehaviour:
   exhaustedBrightness: 0.6
   selectionColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   selectionStrength: 0.5
+  activeTurnColor: {r: 0, g: 1, b: 1, a: 1}
+  activeTurnStrength: 0.3
+  hoverTargetColor: {r: 1, g: 0, b: 0, a: 1}
+  hoverTargetStrength: 0.5
 --- !u!1 &4273585299593972815
 GameObject:
   m_ObjectHideFlags: 0

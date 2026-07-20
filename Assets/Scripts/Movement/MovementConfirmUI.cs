@@ -16,6 +16,8 @@ public class MovementConfirmUI : MonoBehaviour
 
     [SerializeField] private Button confirmButton;
     [SerializeField] private UnitMovementController movementController;
+      [SerializeField] private ActionMenuUI actionMenuUI;
+      [SerializeField] private GameObject ActionMenuSideBar;
 
 
 private void Awake()
@@ -26,6 +28,8 @@ private void Awake()
     panelRoot.SetActive(false);
 
     confirmButton.onClick.AddListener(HandleConfirmClicked);
+
+  
    
     if (movementController == null)
     {
@@ -37,6 +41,10 @@ private void Awake()
         Debug.LogError("MovementConfirmUI: Confirm Button not assigned!");
     }
 
+if (actionMenuUI == null)
+        {
+            return;
+        }
 }
 
 
@@ -75,6 +83,8 @@ private void Start()
             Debug.Log("MovementConfirmUI SHOW");
 
         panelRoot.SetActive(true);
+
+        actionMenuUI.cogPanelRoot.SetActive(true);
         
 
         if (EventSystem.current != null)

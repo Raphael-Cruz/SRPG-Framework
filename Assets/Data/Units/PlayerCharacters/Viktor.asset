@@ -10,13 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e97fe7790be75940a7078db8680008b, type: 3}
-  m_Name: Knight
+  m_Name: Viktor
   m_EditorClassIdentifier: 
-  UnitName: Knight
-  Portrait: {fileID: 0}
+  UnitName: Viktor
+  Portrait: {fileID: 21300000, guid: 57568e7107b4f3e4c9d8a657a9d48965, type: 3}
   Prefab: {fileID: 4259564464024163283, guid: 1a0fcfdf5048d384581787585cdf4f3c, type: 3}
-  MaxHP: 20
+  MaxHP: 50
   MovementRange: 4
-  AttackRange: 1
-  Defense: 4
   Speed: 5
+  Attack: 15
+  Defense: 5
+  Accuracy: 100
+  Avoid: 0
+  AttackRange: 1
