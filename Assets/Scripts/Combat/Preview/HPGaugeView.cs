@@ -22,7 +22,6 @@ public class HPGaugeView : MonoBehaviour
 
     private void Awake()
     {
-        // Empty gauge is always visible
         emptyFill.fillAmount = 1f;
     }
 
@@ -37,40 +36,45 @@ public class HPGaugeView : MonoBehaviour
 
         float t = (Mathf.Sin(pulseTimer * pulseSpeed) + 1f) * 0.5f;
 
+
         predictionFill.color = Color.Lerp(
             predictionLow,
             predictionHigh,
             t);
     }
 
+
 public void SetGauge(HPGaugeState state)
 {
     emptyFill.fillAmount = 1f;
 
 
-    // Actual HP
-    currentFill.fillAmount = state.CurrentFill;
+    // Yellow shows the whole current HP area
+    predictionFill.fillAmount = state.CurrentFill;
 
 
-    // Damage preview
-    predictionFill.fillAmount = state.DamageFill;
-
-
-    // Rotate prediction to start after current HP
-    float startAngle = state.CurrentFill * 360f;
-
-    predictionFill.transform.localEulerAngles =
-        new Vector3(
-            0,
-            0,
-            -startAngle
+    // Red covers the HP that remains after damage
+    float remainingHP =
+        Mathf.Max(
+            state.CurrentHP - state.PredictedDamage,
+            0
         );
+
+
+    currentFill.fillAmount =
+        state.MaxHP <= 0
+            ? 0f
+            : (float)remainingHP / state.MaxHP;
 }
 
 
     public void Hide()
     {
         currentFill.fillAmount = 0f;
+
         predictionFill.fillAmount = 0f;
+
+        predictionFill.rectTransform.localRotation =
+            Quaternion.identity;
     }
 }

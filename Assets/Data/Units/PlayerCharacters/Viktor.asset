@@ -18,7 +18,7 @@ MonoBehaviour:
   MaxHP: 50
   MovementRange: 4
   Speed: 5
-  Attack: 15
+  Attack: 10
   Defense: 5
   Accuracy: 100
   Avoid: 0

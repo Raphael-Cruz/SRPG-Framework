@@ -941,7 +941,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -1776, y: 246}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &303168191
@@ -975,7 +975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.17254902, b: 1, a: 0.43137255}
+  m_Color: {r: 0.251157, g: 0.3185118, b: 0.6415094, a: 0.43137255}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -987,8 +987,8 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
+  m_FillAmount: 0
+  m_FillClockwise: 0
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
@@ -2103,8 +2103,8 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 0
+  m_FillAmount: 0
+  m_FillClockwise: 1
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
@@ -2509,7 +2509,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 26, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &762054257
@@ -3667,7 +3667,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillAmount: 0
   m_FillClockwise: 0
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
@@ -4064,7 +4064,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillAmount: 0
   m_FillClockwise: 1
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
@@ -4273,8 +4273,8 @@ RectTransform:
   m_Children:
   - {fileID: 1978915478}
   - {fileID: 590487196}
-  - {fileID: 1322777016}
   - {fileID: 303168194}
+  - {fileID: 1322777016}
   - {fileID: 1131253937}
   m_Father: {fileID: 1677209028}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4299,9 +4299,9 @@ MonoBehaviour:
   currentFill: {fileID: 1322777017}
   predictionFill: {fileID: 303168192}
   enablePredictionPulse: 1
-  pulseSpeed: 2
-  predictionLow: {r: 1, g: 0.8, b: 0, a: 1}
-  predictionHigh: {r: 1, g: 1, b: 0.3, a: 1}
+  pulseSpeed: 5
+  predictionLow: {r: 0.2509804, g: 0.31764707, b: 0.6431373, a: 1}
+  predictionHigh: {r: 0, g: 0.17254902, b: 1, a: 1}
 --- !u!1 &1308084252
 GameObject:
   m_ObjectHideFlags: 0
@@ -4395,7 +4395,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 0.863
+  m_FillAmount: 0
   m_FillClockwise: 0
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
@@ -4940,8 +4940,8 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
+  m_FillAmount: 0
+  m_FillClockwise: 0
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
@@ -5261,7 +5261,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1745, y: 259}
+  m_AnchoredPosition: {x: 2, y: 13}
   m_SizeDelta: {x: 329.1085, y: 69.2223}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1713465204
@@ -6082,9 +6082,9 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 218277671}
-  - {fileID: 738469052}
-  - {fileID: 1162520559}
   - {fileID: 1178622345}
+  - {fileID: 1162520559}
+  - {fileID: 738469052}
   m_Father: {fileID: 995895243}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6104,8 +6104,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc118434639267a41a5efbd3f673457b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  previewPanel: {fileID: 218277670}
+  previewPanel: {fileID: 1178622344}
   grayPanel: {fileID: 833642907}
+  portraitPanel: {fileID: 218277670}
   attackerPortrait: {fileID: 1978915479}
   targetPortrait: {fileID: 311650892}
   attackerNameText: {fileID: 1713465204}
@@ -6796,8 +6797,8 @@ RectTransform:
   m_Children:
   - {fileID: 311650891}
   - {fileID: 1187127854}
-  - {fileID: 1118462022}
   - {fileID: 1552547506}
+  - {fileID: 1118462022}
   - {fileID: 343078532}
   m_Father: {fileID: 281514194}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -7,7 +7,7 @@ public class CombatPreviewUI : MonoBehaviour
     [Header("Panel")]
     [SerializeField] private GameObject previewPanel;
     [SerializeField] private GameObject grayPanel;
-
+    [SerializeField] private GameObject portraitPanel;
     [Header("Portraits")]
     [SerializeField] private Image attackerPortrait;
     [SerializeField] private Image targetPortrait;
@@ -52,6 +52,7 @@ public class CombatPreviewUI : MonoBehaviour
 
         previewPanel.SetActive(true);
         grayPanel.SetActive(true);
+        portraitPanel.SetActive(true);
 
         leftPanel.SetActive(true);
         rightPanel.SetActive(true);
@@ -83,6 +84,7 @@ public class CombatPreviewUI : MonoBehaviour
     {
         previewPanel.SetActive(false);
         grayPanel.SetActive(false);
+        portraitPanel.SetActive(false);
 
         leftPanel.SetActive(false);
         rightPanel.SetActive(false);
