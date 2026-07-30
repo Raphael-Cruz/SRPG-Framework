@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class AttackRangeCalculator : MonoBehaviour
 {
     private readonly List<GridTile> currentRange = new List<GridTile>();
@@ -12,10 +10,10 @@ public class AttackRangeCalculator : MonoBehaviour
 
     public void ShowAttackRange(Unit unit)
     {
-        
         ClearAttackRange();
 
-        CalculateRange(unit);
+        List<GridTile> tiles = CalculateRange(unit);
+        currentRange.AddRange(tiles);
 
         foreach (GridTile tile in currentRange)
         {
@@ -41,23 +39,29 @@ public class AttackRangeCalculator : MonoBehaviour
     }
 
 
-    private void CalculateRange(Unit unit)
+    // Pure calculation, no visual side effects.
+    // Safe to call for AI evaluation without touching tile state.
+    public List<GridTile> CalculateRange(Unit unit)
     {
-   GridTile start = unit.EffectiveTile;
+        List<GridTile> tiles = new List<GridTile>();
+
+        GridTile start = unit.EffectiveTile;
 
         int range = unit.Data.AttackRange;
 
         // Right
-        CheckDirection(start, 1, 0, range);
+        CheckDirection(start, 1, 0, range, tiles);
 
         // Left
-        CheckDirection(start, -1, 0, range);
+        CheckDirection(start, -1, 0, range, tiles);
 
         // Up
-        CheckDirection(start, 0, 1, range);
+        CheckDirection(start, 0, 1, range, tiles);
 
         // Down
-        CheckDirection(start, 0, -1, range);
+        CheckDirection(start, 0, -1, range, tiles);
+
+        return tiles;
     }
 
 
@@ -65,7 +69,8 @@ public class AttackRangeCalculator : MonoBehaviour
         GridTile start,
         int xDirection,
         int yDirection,
-        int range)
+        int range,
+        List<GridTile> tiles)
     {
         int x = start.X;
         int y = start.Y;
@@ -80,7 +85,7 @@ public class AttackRangeCalculator : MonoBehaviour
             if (tile == null)
                 break;
 
-            currentRange.Add(tile);
+            tiles.Add(tile);
 
             // Future:
             // Stop here if line-of-sight is blocked.

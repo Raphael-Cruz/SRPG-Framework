@@ -1,189 +1,306 @@
-# SRPG-Framework
-A turn-based tactical RPG prototype built in Unity (C#) focused on modular architecture, grid-based combat systems, and data-driven gameplay design.
+# SRPG Framework
 
+A tactical turn-based RPG framework built in **Unity (C#)** with a strong focus on **modular architecture**, **data-driven systems**, and **reusable gameplay components**.
 
-# Tactical SRPG Project
-
-
-
-A turn-based tactical RPG prototype built in **Unity (C#)** focused on modular architecture, grid-based combat systems, and data-driven gameplay design.
-
-The goal of this project is to create a flexible SRPG framework inspired by classic tactical RPGs, featuring strategic movement, unit management, abilities, and combat systems.
+Rather than building a single game, this project aims to create a scalable SRPG framework where combat, movement, AI, UI, and gameplay systems remain independent, extensible, and easy to maintain.
 
 ---
 
-## 🎮 Overview
+# Overview
 
-This project is a tactical role-playing game prototype where players control units on a grid-based battlefield. Each decision matters: positioning, movement range, abilities, and terrain awareness play an important role in combat.
+This project is inspired by classic tactical RPGs where positioning, terrain, turn order, and tactical decisions matter as much as character statistics.
 
-The project focuses not only on gameplay but also on creating a clean and scalable code architecture.
+The framework emphasizes clean software architecture by separating gameplay systems into independent modules that communicate through well-defined interfaces.
 
----
-
-## ✨ Current Features
-
-### Core Systems
-
-✅ Grid-based tactical battlefield
-✅ Tile selection and highlighting
-✅ Unit placement system
-✅ Unit data architecture using ScriptableObjects
-✅ Player input system using Unity Input System
-✅ Tactical camera controls
-✅ Movement range visualization
-
-### Combat Systems
-
-🚧 Turn-based combat system *(in development)*
-🚧 Attack range calculation *(in development)*
-🚧 Damage and health systems *(in development)*
-🚧 Skills and abilities *(in development)*
-
-### Future Systems
-
-* Enemy AI
-* Multiple character classes
-* Equipment system
-* Status effects
-* Terrain effects
-* Campaign progression
-* Save/load system
+Current development focuses on building the game's core systems before expanding into content creation.
 
 ---
 
-## 🛠️ Technologies
+# Current Features
 
-| Technology         | Usage                    |
-| ------------------ | ------------------------ |
-| Unity              | Game engine              |
-| C#                 | Gameplay programming     |
-| Unity Input System | Player controls          |
-| ScriptableObjects  | Data-driven architecture |
-| Git                | Version control          |
+## Grid & Navigation
+
+* ✅ Procedural grid generation
+* ✅ Tile selection and highlighting
+* ✅ 8-direction movement
+* ✅ Movement range calculation
+* ✅ Tactical cursor and hover feedback
+* ✅ Grid-based pathfinding
 
 ---
 
-## 🏗️ Architecture
+## Unit System
 
-The project follows a modular approach, separating gameplay systems into independent components.
+* ✅ ScriptableObject-driven unit data
+* ✅ Player and enemy unit support
+* ✅ Runtime unit spawning
+* ✅ Unit state management
+* ✅ Portrait integration
 
-Example architecture:
+---
 
-```
+## Turn System
+
+* ✅ Initiative-based turn order
+* ✅ Turn manager
+* ✅ Battle manager
+* ✅ Player turn flow
+* ✅ Action state management
+
+---
+
+## Combat System
+
+* ✅ Modular combat simulator
+* ✅ Combat prediction pipeline
+* ✅ Damage calculation
+* ✅ Hit chance calculation
+* ✅ Defense & Avoid systems
+* ✅ Combat modifiers
+* ✅ HP prediction gauges
+* ✅ Real-time battle preview
+* ✅ Extensible combat evaluators
+
+---
+
+## UI
+
+* ✅ Tactical battle preview
+* ✅ HP radial gauges
+* ✅ Damage prediction overlay
+* ✅ Animated page-flipping battle preview
+* ✅ Modifier panel framework
+
+---
+
+## AI (Foundation)
+
+* ✅ Utility AI architecture
+* ✅ Action generation framework
+* ✅ Combat prediction reuse
+* ✅ Utility scoring system
+* ✅ AI personality profiles
+* ✅ Action prediction pipeline
+
+---
+
+# Architecture
+
+The project follows a modular architecture where every system has a single responsibility.
+
+```text
 Game
 │
-├── Grid System
+├── Input
+│   ├── InputManager
+│   ├── MouseSelector
+│   └── CameraController
+│
+├── Grid
 │   ├── GridManager
 │   ├── GridTile
-│   └── Pathfinding
+│   ├── Pathfinding
+│   └── Range Calculators
 │
 ├── Units
 │   ├── Unit
 │   ├── UnitData
-│   └── UnitController
+│   ├── UnitSpawner
+│   └── Unit Controllers
+│
+├── Battle
+│   ├── BattleManager
+│   ├── TurnManager
+│   └── Initiative System
 │
 ├── Combat
-│   ├── TurnManager
-│   ├── ActionSystem
-│   └── DamageSystem
+│   ├── CombatSimulator
+│   ├── CombatResolver
+│   ├── CombatPrediction
+│   ├── CombatModifiers
+│   ├── CombatFacts
+│   └── CombatEvaluators
 │
-└── Input
-    └── InputManager
+├── AI
+│   ├── AIActionGenerator
+│   ├── IAIAction
+│   ├── AIActionOutcome
+│   ├── UtilityActionScorer
+│   └── AIPersonalityProfile
+│
+└── UI
+    ├── Combat Preview
+    ├── HP Gauges
+    ├── Modifier Views
+    └── Battle Panels
 ```
 
-The objective is to keep systems reusable and easy to expand.
+Each system is designed to evolve independently while sharing common gameplay data.
 
 ---
 
-## 📸 Screenshots
+# Combat Architecture
 
-### Tactical Grid
+Combat is entirely simulation-driven.
 
-![Grid Screenshot](docs/images/grid.png)
+Instead of directly calculating damage inside gameplay systems, combat flows through a prediction pipeline.
 
-### Unit Selection
-
-![Selection Screenshot](docs/images/selection.png)
-
----
-
-## 🚧 Development Roadmap
-
-### Phase 1 - Foundation ✅
-
-* [x] Unity project setup
-* [x] Grid generation
-* [x] Tile selection
-* [x] Unit spawning
-* [x] Basic unit architecture
-
-### Phase 2 - Combat Foundation
-
-* [x] Turn management
-* [x] Movement execution
-* [x] Attack system
-* [x] Damage calculation
-* [x] Action Menu UI 
-
-### Phase 3 - Advanced Gameplay
-
-* [ ] Enemy AI
-* [ ] Skills
-* [ ] Equipment
-* [ ] Status effects
-* [ ] Campaign system
-
----
-
-## 📚 Documentation
-
-Additional documentation can be found in:
-
-```
-/Docs
+```text
+CombatContext
+        │
+        ▼
+CombatSimulator
+        │
+        ▼
+Fact Providers
+        │
+        ▼
+Combat Evaluators
+        │
+        ▼
+Combat Modifiers
+        │
+        ▼
+CombatResolver
+        │
+        ▼
+CombatPrediction
 ```
 
-Including:
-
-* Game Design Document
-* Technical Design Document
-* Architecture notes
-* Development decisions
+This allows combat previews, AI, UI, and gameplay logic to use the exact same simulation results.
 
 ---
 
-## 🎯 Project Goals
+# AI Architecture
 
-This project serves as both a game development experiment and a study in software architecture.
+The AI is designed around **Utility AI**, allowing units to evaluate possible actions rather than following scripted behavior trees.
 
-Main goals:
+Decision flow:
 
-* Build a complete SRPG prototype
-* Practice advanced Unity and C# patterns
-* Develop scalable gameplay systems
-* Improve game programming skills
+```text
+Observe Battlefield
+        │
+        ▼
+Generate Actions
+        │
+        ▼
+Predict Outcomes
+        │
+        ▼
+Score Utility
+        │
+        ▼
+Choose Best Action
+        │
+        ▼
+Execute
+```
+
+Current implementation includes:
+
+* Action generation
+* Combat prediction
+* Utility scoring
+* Personality profiles
+* Action outcome prediction
+
+The long-term goal is to support advanced tactical behaviors without rewriting the AI core.
 
 ---
 
-## 👤 Developer
+# Technologies
+
+| Technology         | Purpose                  |
+| ------------------ | ------------------------ |
+| Unity              | Game Engine              |
+| C#                 | Gameplay Programming     |
+| Unity Input System | Player Controls          |
+| ScriptableObjects  | Data-driven Architecture |
+| Git                | Version Control          |
+
+---
+
+# Development Roadmap
+
+## Phase 1 — Foundation ✅
+
+* Grid generation
+* Unit architecture
+* Input system
+* Camera controls
+* Movement system
+
+---
+
+## Phase 2 — Combat Foundation ✅
+
+* Turn management
+* Initiative system
+* Combat simulator
+* Combat prediction
+* Battle preview
+* HP gauge system
+* Modifier framework
+
+---
+
+## Phase 3 — AI Foundation 🚧
+
+* ✅ Utility AI framework
+* ✅ Action generation
+* ✅ Action prediction
+* ✅ Personality profiles
+* ⏳ Action selection
+* ⏳ Movement actions
+* ⏳ Tactical positioning
+
+---
+
+## Phase 4 — Advanced Gameplay
+
+* Character classes
+* Skills & abilities
+* Equipment
+* Status effects
+* Terrain interactions
+* Objectives
+* Campaign progression
+
+---
+
+# Project Goals
+
+This project serves both as a playable tactical RPG prototype and as an exploration of scalable game architecture.
+
+Primary goals:
+
+* Build a complete SRPG framework
+* Practice advanced software architecture in Unity
+* Create reusable gameplay systems
+* Explore modular AI design
+* Develop maintainable and extensible combat systems
+
+---
+
+# Developer
 
 **Raphael Cruz**
 
-Full Stack Developer transitioning deeper into game development.
+Full Stack Developer transitioning into gameplay and systems programming.
 
-Skills demonstrated in this project:
+Areas demonstrated in this project include:
 
 * C#
 * Unity
-* Object-oriented programming
-* Game architecture
-* Systems design
+* Object-Oriented Programming
+* Gameplay Systems Architecture
+* Utility AI Design
+* Modular Combat Systems
+* Data-Driven Design
+* Software Engineering Principles
 
 ---
 
-## 📄 License
+# License
 
-This project is currently for educational and portfolio purposes.
-
-```
-```
+This project is currently developed for educational purposes and as a portfolio piece.

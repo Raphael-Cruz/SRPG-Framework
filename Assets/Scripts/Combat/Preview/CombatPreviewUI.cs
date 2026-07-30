@@ -119,11 +119,10 @@ public class CombatPreviewUI : MonoBehaviour
         bottomPanel.SetActive(false);
 
         leftFrontPanel.SetActive(false);
-         rightFrontPanel.SetActive(false);
-          leftBackPanel.SetActive(false);
-           rightBackPanel.SetActive(false);
+        rightFrontPanel.SetActive(false);
+        leftBackPanel.SetActive(false);
+        rightBackPanel.SetActive(false);
 
-        ResetPages();
 
         attackerPortrait.sprite = null;
         attackerPortrait.enabled = false;
