@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,10 +8,14 @@ public class UnitManager : MonoBehaviour
 
     private Dictionary<GridTile, Unit> occupiedTiles = new();
 
-
     public IReadOnlyList<Unit> Units => units;
 
-    
+    // Aggregated from every registered unit's own events, so a listener
+    // only needs one subscription to know "something on the battlefield
+    // moved or died" instead of managing per-unit subscriptions itself.
+    public event Action<Unit> OnUnitMoved;
+    public event Action<Unit> OnUnitDied;
+
     public Unit SpawnUnit(UnitData data, GridTile tile)
     {
         GameObject obj = Instantiate(
@@ -18,7 +23,6 @@ public class UnitManager : MonoBehaviour
             tile.WorldPosition,
             Quaternion.identity
         );
-
 
         Unit unit = obj.GetComponent<Unit>();
 
@@ -32,25 +36,24 @@ public class UnitManager : MonoBehaviour
             return null;
         }
 
-
         unit.SetTile(tile);
 
         RegisterUnit(unit, tile);
 
-
         return unit;
     }
 
+    private void RegisterUnit(Unit unit, GridTile tile)
+    {
+        units.Add(unit);
 
-private void RegisterUnit(Unit unit, GridTile tile)
-{
-    units.Add(unit);
+        occupiedTiles.Add(tile, unit);
 
-    occupiedTiles.Add(tile, unit);
+        tile.SetOccupant(unit);
 
-    tile.SetOccupant(unit);
-}
-
+        unit.OnMoved += HandleUnitMoved;
+        unit.OnDied += HandleUnitDied;
+    }
 
     public Unit GetUnitAt(GridTile tile)
     {
@@ -62,12 +65,10 @@ private void RegisterUnit(Unit unit, GridTile tile)
         return null;
     }
 
-
     public bool IsTileOccupied(GridTile tile)
     {
         return occupiedTiles.ContainsKey(tile);
     }
-
 
     public void RemoveUnit(Unit unit)
     {
@@ -77,5 +78,18 @@ private void RegisterUnit(Unit unit, GridTile tile)
         {
             occupiedTiles.Remove(unit.CurrentTile);
         }
+
+        unit.OnMoved -= HandleUnitMoved;
+        unit.OnDied -= HandleUnitDied;
+    }
+
+    private void HandleUnitMoved(Unit unit)
+    {
+        OnUnitMoved?.Invoke(unit);
+    }
+
+    private void HandleUnitDied(Unit unit)
+    {
+        OnUnitDied?.Invoke(unit);
     }
 }

@@ -9,6 +9,8 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private InitiativeOrderSystem initiativeOrder;
     [SerializeField] private SelectionManager selectionManager;
 
+[SerializeField] private AITurnController aiTurnController;
+
     private List<Unit> turnOrder = new();
     private int currentIndex = -1;
     private int roundNumber;
@@ -102,10 +104,11 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    private void RunAITurn(Unit unit)
-    {
-        EndTurn(unit);
-    }
+
+        private void RunAITurn(Unit unit)
+{
+    aiTurnController.RunTurn(unit);
+}
 
     public void EndTurn(Unit unit)
     {
@@ -133,4 +136,5 @@ public class TurnManager : MonoBehaviour
             CurrentUnit.SetActiveTurn(false);
         }
     }
+
 }

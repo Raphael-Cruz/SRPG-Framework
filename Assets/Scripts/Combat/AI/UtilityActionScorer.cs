@@ -1,4 +1,3 @@
-
 public class UtilityActionScorer : IAIActionScorer
 {
     private readonly AIPersonalityProfile profile;
@@ -10,9 +9,19 @@ public class UtilityActionScorer : IAIActionScorer
 
     public float Score(IAIAction action, AIActionOutcome outcome)
     {
+        if (outcome.Has("IsWait"))
+        {
+            return ScoreWait(outcome);
+        }
+
         if (outcome.CombatPrediction != null)
         {
             return ScoreCombat(outcome);
+        }
+
+        if (outcome.Has("OpensAttack"))
+        {
+            return ScoreMove(outcome);
         }
 
         return 0f;
@@ -38,5 +47,36 @@ public class UtilityActionScorer : IAIActionScorer
         }
 
         return score;
+    }
+
+    private float ScoreMove(AIActionOutcome outcome)
+    {
+        outcome.TryGet("OpensAttack", out bool opensAttack);
+        outcome.TryGet("ThreatAtDestination", out int threat);
+
+        float score = 0f;
+
+        if (opensAttack)
+        {
+            outcome.TryGet("BestReachableDamage", out int damage);
+            outcome.TryGet("BestReachableHitChance", out float hitChance);
+
+            float expectedDamage = damage * (hitChance / 100f);
+
+            score += expectedDamage
+                * profile.DamageWeight
+                * profile.MoveOpportunityDiscount;
+        }
+
+        score -= threat * profile.ThreatWeight;
+
+        return score;
+    }
+
+    private float ScoreWait(AIActionOutcome outcome)
+    {
+        outcome.TryGet("ThreatAtCurrentTile", out int threat);
+
+        return -threat * profile.ThreatWeight;
     }
 }

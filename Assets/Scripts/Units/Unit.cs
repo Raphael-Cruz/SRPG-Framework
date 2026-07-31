@@ -60,10 +60,14 @@ public class Unit : MonoBehaviour
 
 
 
-    public event Action<Unit> OnTurnStateChanged;
+   
 
 
 private GridTile previewTile;
+
+public event Action<Unit> OnTurnStateChanged;
+public event Action<Unit> OnMoved;
+public event Action<Unit> OnDied;
 
 public GridTile EffectiveTile =>
     previewTile != null ? previewTile : currentTile;
@@ -171,47 +175,36 @@ public void SetCurrentTile(GridTile tile)
 
 
 
-    public void MoveTo(GridTile targetTile)
+ public void MoveTo(GridTile targetTile)
+{
+    if (!CanMove)
     {
-        if (!CanMove)
-        {
-            Debug.Log($"{name} already moved this turn.");
-            return;
-        }
-
-
-        if (targetTile.Occupant != null)
-        {
-            Debug.Log("Tile occupied.");
-            return;
-        }
-
-
-
-        if (currentTile != null)
-        {
-            currentTile.ClearOccupant();
-        }
-
-
-
-        transform.position = targetTile.WorldPosition;
-
-
-        currentTile = targetTile;
-
-        targetTile.SetOccupant(this);
-
-
-
-        MoveUsed();
-
-
-
-        Debug.Log(
-            $"{name} moved to ({targetTile.X},{targetTile.Y})"
-        );
+        Debug.Log($"{name} already moved this turn.");
+        return;
     }
+
+    if (targetTile.Occupant != null)
+    {
+        Debug.Log("Tile occupied.");
+        return;
+    }
+
+    if (currentTile != null)
+    {
+        currentTile.ClearOccupant();
+    }
+
+    transform.position = targetTile.WorldPosition;
+
+    currentTile = targetTile;
+    targetTile.SetOccupant(this);
+
+    MoveUsed();
+
+    Debug.Log($"{name} moved to ({targetTile.X},{targetTile.Y})");
+
+    OnMoved?.Invoke(this);
+}
 
 
 public void SetPreviewTile(GridTile tile)
@@ -247,25 +240,21 @@ public void ClearPreviewTile()
         }
     }
 
+private void Die()
+{
+    Debug.Log($"{name} died");
 
-
-
-    private void Die()
+    if (currentTile != null)
     {
-        Debug.Log($"{name} died");
-
-
-        if(currentTile != null)
-        {
-            currentTile.ClearOccupant();
-        }
-
-
-        gameObject.SetActive(false);
-
-
-        BattleManager.Instance?.CheckBattleEnd();
+        currentTile.ClearOccupant();
     }
+
+    gameObject.SetActive(false);
+
+    BattleManager.Instance?.CheckBattleEnd();
+
+    OnDied?.Invoke(this);
+}
 }
 
 

@@ -34,19 +34,13 @@ private CombatPreviewUI previewUI;
     }
 
 
+    
 
     private void InitializeSimulator()
     {
-simulator = new CombatSimulator(
-    new List<ICombatFactProvider>(),
-    new List<ICombatEvaluator>
-    {
-        new TestModifierEvaluator(),
-        new TestFlankingEvaluator()
-    },
-    new CombatResolver()
-);
-    }
+simulator = CombatSimulatorFactory.CreateStandard();
+}
+    
 
 
 public CombatPrediction PreviewAttack(
@@ -95,5 +89,7 @@ public CombatPrediction PreviewAttack(
         CurrentPrediction = null;
 
         previewUI.Hide();
-            }
+    }
+
+
 }

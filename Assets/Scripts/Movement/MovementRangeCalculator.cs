@@ -58,17 +58,23 @@ public class MovementRangeCalculator : MonoBehaviour
     }
 
 
-    public void ShowMovementRange(Unit unit)
+public void ShowMovementRange(Unit unit)
+{
+    ClearMovementRange();
+
+    Dictionary<GridTile, int> costs = CalculateRange(unit);
+
+    foreach (KeyValuePair<GridTile, int> entry in costs)
     {
-        ClearMovementRange();
-
-        CalculateRange(unit);
-
-        foreach (GridTile tile in currentRange)
-        {
-            tile.SetMovementRange(true);
-        }
+        currentCost[entry.Key] = entry.Value;
+        currentRange.Add(entry.Key);
     }
+
+    foreach (GridTile tile in currentRange)
+    {
+        tile.SetMovementRange(true);
+    }
+}
 
 
     public void ClearMovementRange()
@@ -97,86 +103,77 @@ public class MovementRangeCalculator : MonoBehaviour
     // ==========================
     // Weighted range calculation (Dijkstra)
     // ==========================
-    //
-    // Movement is no longer uniform-cost, so a plain BFS (which assumes every
-    // edge costs the same) can no longer guarantee the cheapest distance to
-    // each tile. Dijkstra always expands the *cheapest known* frontier tile
-    // next, so once a tile is finalized we know that's the true minimum cost
-    // to reach it - even with mixed orthogonal/diagonal (and, later, terrain) costs.
-    private void CalculateRange(Unit unit)
+
+    
+    
+    // Pure calculation, no visual side effects, no shared-state mutation.
+// Safe to call for AI evaluation without touching this instance's
+// currentCost/currentRange (which drive tile highlighting for whoever
+// owns this calculator).
+public Dictionary<GridTile, int> CalculateRange(Unit unit)
+{
+    int movement = unit.Data.MovementRange;
+
+    GridTile start = unit.CurrentTile;
+
+    Dictionary<GridTile, int> distance = new Dictionary<GridTile, int>();
+    HashSet<GridTile> visited = new HashSet<GridTile>();
+
+    List<(GridTile tile, int cost)> frontier = new List<(GridTile, int)>();
+
+    distance[start] = 0;
+    frontier.Add((start, 0));
+
+    while (frontier.Count > 0)
     {
-        int movement = unit.Data.MovementRange;
+        int bestIndex = GetLowestCostIndex(frontier);
+        (GridTile current, int currentDistance) = frontier[bestIndex];
+        frontier.RemoveAt(bestIndex);
 
-        GridTile start = unit.CurrentTile;
+        if (visited.Contains(current))
+            continue;
 
-        Dictionary<GridTile, int> distance = new Dictionary<GridTile, int>();
-        HashSet<GridTile> visited = new HashSet<GridTile>();
+        visited.Add(current);
 
-        // Simple min-priority queue over (tile, cost). Grids in this game are
-        // small, so a List + linear scan for the minimum is fast enough and
-        // avoids pulling in an external priority queue implementation.
-        // (Fine up to ~15x15 maps; swap for a binary heap if maps grow much
-        // larger than that.)
-        List<(GridTile tile, int cost)> frontier = new List<(GridTile, int)>();
-
-        distance[start] = 0;
-        frontier.Add((start, 0));
-
-        while (frontier.Count > 0)
+        foreach (GridTile neighbor in GridManager.Instance.GetNeighbors(current))
         {
-            int bestIndex = GetLowestCostIndex(frontier);
-            (GridTile current, int currentDistance) = frontier[bestIndex];
-            frontier.RemoveAt(bestIndex);
-
-            // A tile can be enqueued more than once with different costs;
-            // once it's been visited with its true minimum, skip stale entries.
-            if (visited.Contains(current))
+            if (visited.Contains(neighbor))
                 continue;
 
-            visited.Add(current);
+            if (neighbor.Occupant != null)
+                continue;
 
-            foreach (GridTile neighbor in GridManager.Instance.GetNeighbors(current))
+            int moveCost = costProvider.GetCost(unit, current, neighbor);
+
+            if (moveCost <= 0)
+                continue;
+
+            int newDistance = currentDistance + moveCost;
+
+            if (newDistance > movement)
+                continue;
+
+            if (!distance.TryGetValue(neighbor, out int knownDistance) ||
+                newDistance < knownDistance)
             {
-                if (visited.Contains(neighbor))
-                    continue;
-
-                if (neighbor.Occupant != null)
-                    continue;
-
-                int moveCost = costProvider.GetCost(unit, current, neighbor);
-
-                // Impassable tiles (e.g. future "Water") report a cost <= 0.
-                if (moveCost <= 0)
-                    continue;
-
-                int newDistance = currentDistance + moveCost;
-
-                if (newDistance > movement)
-                    continue;
-
-                if (!distance.TryGetValue(neighbor, out int knownDistance) ||
-                    newDistance < knownDistance)
-                {
-                    distance[neighbor] = newDistance;
-                    frontier.Add((neighbor, newDistance));
-                }
+                distance[neighbor] = newDistance;
+                frontier.Add((neighbor, newDistance));
             }
         }
-
-        // Reuse the existing dictionary/list rather than replacing them,
-        // to avoid handing Unity's GC more work than it already has.
-        currentCost.Clear();
-        currentRange.Clear();
-
-        foreach (KeyValuePair<GridTile, int> entry in distance)
-        {
-            if (entry.Key == start)
-                continue;
-
-            currentCost[entry.Key] = entry.Value;
-            currentRange.Add(entry.Key);
-        }
     }
+
+    Dictionary<GridTile, int> result = new Dictionary<GridTile, int>();
+
+    foreach (KeyValuePair<GridTile, int> entry in distance)
+    {
+        if (entry.Key == start)
+            continue;
+
+        result[entry.Key] = entry.Value;
+    }
+
+    return result;
+}
 
 
     private int GetLowestCostIndex(List<(GridTile tile, int cost)> frontier)
