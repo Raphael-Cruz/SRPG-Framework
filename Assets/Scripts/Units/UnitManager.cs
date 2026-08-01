@@ -4,20 +4,65 @@ using UnityEngine;
 
 public class UnitManager : MonoBehaviour
 {
+    public static UnitManager Instance { get; private set; }
+
     private List<Unit> units = new();
 
     private Dictionary<GridTile, Unit> occupiedTiles = new();
 
     public IReadOnlyList<Unit> Units => units;
 
-    // Aggregated from every registered unit's own events, so a listener
-    // only needs one subscription to know "something on the battlefield
-    // moved or died" instead of managing per-unit subscriptions itself.
     public event Action<Unit> OnUnitMoved;
     public event Action<Unit> OnUnitDied;
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
     public Unit SpawnUnit(UnitData data, GridTile tile)
     {
+        if (data == null)
+        {
+            Debug.LogError("Cannot spawn unit. UnitData is null.");
+            return null;
+        }
+
+        if (tile == null)
+        {
+            Debug.LogError(
+                $"Cannot spawn {data.UnitName}. GridTile is null."
+            );
+
+            return null;
+        }
+
+        if (data.Prefab == null)
+        {
+            Debug.LogError(
+                $"Cannot spawn {data.UnitName}. " +
+                "UnitData.Prefab is not assigned."
+            );
+
+            return null;
+        }
+
+        if (occupiedTiles.ContainsKey(tile))
+        {
+            Debug.LogError(
+                $"Cannot spawn {data.UnitName}. " +
+                $"Tile ({tile.X},{tile.Y}) is already occupied."
+            );
+
+            return null;
+        }
+
         GameObject obj = Instantiate(
             data.Prefab,
             tile.WorldPosition,
@@ -45,6 +90,12 @@ public class UnitManager : MonoBehaviour
 
     private void RegisterUnit(Unit unit, GridTile tile)
     {
+        if (unit == null || tile == null)
+            return;
+
+        if (units.Contains(unit))
+            return;
+
         units.Add(unit);
 
         occupiedTiles.Add(tile, unit);
@@ -57,6 +108,9 @@ public class UnitManager : MonoBehaviour
 
     public Unit GetUnitAt(GridTile tile)
     {
+        if (tile == null)
+            return null;
+
         if (occupiedTiles.TryGetValue(tile, out Unit unit))
         {
             return unit;
@@ -67,11 +121,17 @@ public class UnitManager : MonoBehaviour
 
     public bool IsTileOccupied(GridTile tile)
     {
+        if (tile == null)
+            return false;
+
         return occupiedTiles.ContainsKey(tile);
     }
 
     public void RemoveUnit(Unit unit)
     {
+        if (unit == null)
+            return;
+
         units.Remove(unit);
 
         if (unit.CurrentTile != null)
@@ -90,6 +150,8 @@ public class UnitManager : MonoBehaviour
 
     private void HandleUnitDied(Unit unit)
     {
+        RemoveUnit(unit);
+
         OnUnitDied?.Invoke(unit);
     }
 }

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class AIPerception
 {
@@ -11,6 +13,8 @@ public class AIPerception
 
     public BattlefieldSnapshot Observe(Unit self)
     {
+        Debug.Log($"AIPerception sees {unitManager.Units.Count} total units in UnitManager.");
+
         List<Unit> allies = new List<Unit>();
         List<Unit> enemies = new List<Unit>();
 
