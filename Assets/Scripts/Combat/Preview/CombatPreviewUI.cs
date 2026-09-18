@@ -1,201 +1,112 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+
+[Serializable]
+public class CombatantUIStats
+{
+    public Image Portrait;
+    public TMP_Text NameText;
+    public TMP_Text LevelText;
+    
+    [Header("Gauges")]
+    public HPGaugeView HPGauge;
+    public TMP_Text HPText;
+    
+    // We can reuse HPGaugeView for SP, or just a generic slider/bar
+    // Assuming HPGaugeView works fine for now, or we can just update a text
+    public TMP_Text SPText;
+    // public HPGaugeView SPGauge; // Descomente caso tenha criado um SPGaugeView ou vá usar o HPGaugeView para SP
+
+    [Header("Stats")]
+    public TMP_Text DamageText;
+    public TMP_Text HitOrAvoidText; // HIT% para atacante, AVO% para defensor
+    public TMP_Text CritText;
+
+    [Header("Modifiers")]
+    public Transform ModifiersContainer; // Layout Group para os ícones
+}
 
 public class CombatPreviewUI : MonoBehaviour
 {
     [Header("Main Panels")]
     [SerializeField] private GameObject previewPanel;
-    [SerializeField] private GameObject grayPanel;
-    [SerializeField] private GameObject portraitPanel;
-    [SerializeField] private GameObject bottomPanel;
-
-    [Header("Front Page")]
-    [SerializeField] private GameObject leftFrontPanel;
-    [SerializeField] private GameObject rightFrontPanel;
-
     
+    [Header("Combatants")]
+    [SerializeField] private CombatantUIStats attackerStats;
+    [SerializeField] private CombatantUIStats defenderStats;
 
-    [Header("Back Page")]
-    [SerializeField] private GameObject modifierPage;
-       
-    [SerializeField] private GameObject leftBackPanel;
-    [SerializeField] private GameObject rightBackPanel;
-
-    [Header("Portraits")]
-    [SerializeField] private Image attackerPortrait;
-    [SerializeField] private Image targetPortrait;
-
-    [Header("Texts")]
-    [SerializeField] private TMP_Text attackerNameText;
-     [SerializeField] private TMP_Text attackerNameTextbackPanel;
-    [SerializeField] private TMP_Text targetNameText;
-    [SerializeField] private TMP_Text damageText;
-    [SerializeField] private TMP_Text hitChanceText;
-    [SerializeField] private TMP_Text defenseText;
-    [SerializeField] private TMP_Text avoidChanceText;
-
-    [Header("HP Gauges")]
-    [SerializeField] private HPGaugeView attackerGauge;
-    [SerializeField] private HPGaugeView defenderGauge;
-
-    [Header("Modifiers")]
-    [SerializeField] private ModifierListView attackerModifierList;
+    [Header("Prefabs")]
+    [SerializeField] private GameObject modifierIconPrefab; // Prefab contendo apenas uma Image (Image componente)
 
     private void Awake()
     {
         Hide();
     }
 
-  public void Show(Unit attacker, Unit target, CombatPrediction prediction)
-{
-    Debug.Log("CombatPreviewUI.Show()");
-
-    if (attacker == null)
+    public void Show(Unit attacker, Unit target, CombatPrediction prediction)
     {
-        Debug.Log("Attacker is NULL");
-        Hide();
-        return;
-    }
-
-    if (target == null)
-    {
-        Debug.Log("Target is NULL");
-        Hide();
-        return;
-    }
-
-    if (prediction == null)
-    {
-        Debug.Log("Prediction is NULL");
-        Hide();
-        return;
-    }
-
-    Debug.Log($"Modifiers: {prediction.Modifiers.Count}");
+        if (attacker == null || target == null || prediction == null)
+        {
+            Hide();
+            return;
+        }
 
         previewPanel.SetActive(true);
-        grayPanel.SetActive(true);
-        portraitPanel.SetActive(true);
-        bottomPanel.SetActive(true);
 
-        ResetPages();
+        // Preenche Atacante
+        FillCombatant(attackerStats, attacker, prediction.AttackerGauge, prediction.AttackerSPGauge, prediction.MinDamage, prediction.MaxDamage, prediction.HitChance, prediction.CritChance, prediction.Modifiers);
+        
+        // Preenche Defensor
+        FillCombatant(defenderStats, target, prediction.DefenderGauge, prediction.DefenderSPGauge, prediction.MinDamage, prediction.MaxDamage, prediction.Avoid, prediction.CritChance, prediction.Modifiers);
+    }
 
-        // Portraits
-        attackerPortrait.sprite = attacker.Data.Portrait;
-        attackerPortrait.enabled = attacker.Data.Portrait != null;
+    private void FillCombatant(CombatantUIStats stats, Unit unit, HPGaugeState hpGauge, SPGaugeState spGauge, int minDmg, int maxDmg, float hitOrAvo, float crit, IReadOnlyList<CombatModifier> modifiers)
+    {
+        if (stats.Portrait != null)
+        {
+            stats.Portrait.sprite = unit.Data.Portrait;
+            stats.Portrait.enabled = unit.Data.Portrait != null;
+        }
 
-        targetPortrait.sprite = target.Data.Portrait;
-        targetPortrait.enabled = target.Data.Portrait != null;
+        if (stats.NameText != null) stats.NameText.text = unit.Data.UnitName;
+        if (stats.LevelText != null) stats.LevelText.text = $"LV  {unit.Data.Level}";
 
-        // Names
-        attackerNameText.text = attacker.Data.UnitName;
-         attackerNameTextbackPanel.text = attacker.Data.UnitName;
-        targetNameText.text = target.Data.UnitName;
+        if (stats.HPGauge != null) stats.HPGauge.SetGauge(hpGauge);
+        if (stats.HPText != null) stats.HPText.text = $"{hpGauge.CurrentHP} / {hpGauge.MaxHP}";
 
-        // Stats
-        damageText.text = prediction.Damage.ToString();
-        hitChanceText.text = $"{prediction.HitChance:0}%";
-        defenseText.text = prediction.Defense.ToString();
-        avoidChanceText.text = $"{prediction.Avoid:0}%";
+        if (stats.SPText != null) stats.SPText.text = $"{spGauge.CurrentSP} / {spGauge.MaxSP}";
 
-        // HP
-        attackerGauge.SetGauge(prediction.AttackerGauge);
-        defenderGauge.SetGauge(prediction.DefenderGauge);
+        if (stats.DamageText != null) stats.DamageText.text = $"{minDmg} - {maxDmg}";
+        if (stats.HitOrAvoidText != null) stats.HitOrAvoidText.text = $"{hitOrAvo:0}";
+        if (stats.CritText != null) stats.CritText.text = $"{crit:0}";
 
         // Modifiers
-        attackerModifierList.Show(prediction.Modifiers);
+        if (stats.ModifiersContainer != null && modifierIconPrefab != null)
+        {
+            // Limpa os ícones antigos
+            foreach (Transform child in stats.ModifiersContainer)
+            {
+                Destroy(child.gameObject);
+            }
 
-        leftBackPanel.SetActive(false);
-          rightBackPanel.SetActive(false);
+            // Cria um ícone para cada modificador ativo
+            foreach (var mod in modifiers)
+            {
+                // Aqui você instanciará o prefab. No futuro, você usará mod.Icon se adicionar isso no CombatModifier
+                GameObject icon = Instantiate(modifierIconPrefab, stats.ModifiersContainer);
+                
+                // Exemplo:
+                // Image img = icon.GetComponent<Image>();
+                // img.sprite = mod.Icon;
+            }
+        }
     }
 
     public void Hide()
     {
         previewPanel.SetActive(false);
-        grayPanel.SetActive(false);
-        portraitPanel.SetActive(false);
-        bottomPanel.SetActive(false);
-
-        leftFrontPanel.SetActive(false);
-        rightFrontPanel.SetActive(false);
-        leftBackPanel.SetActive(false);
-        rightBackPanel.SetActive(false);
-
-
-        attackerPortrait.sprite = null;
-        attackerPortrait.enabled = false;
-
-        targetPortrait.sprite = null;
-        targetPortrait.enabled = false;
-
-        attackerNameText.text = "";
-        
-        attackerNameTextbackPanel.text = "";
-        targetNameText.text = "";
-        damageText.text = "";
-        defenseText.text = "";
-        hitChanceText.text = "";
-        avoidChanceText.text = "";
-
-        attackerModifierList.Clear();
     }
-
-    public void ResetPages()
-    {
-        leftFrontPanel.SetActive(true);
-        rightFrontPanel.SetActive(true);
-
-        if (modifierPage != null)
-            modifierPage.SetActive(false);
-    }
-
-    public void HideOnFlipLeft()
-    {
-        leftFrontPanel.SetActive(false);
-        Debug.Log("hide on");
-    }
-
-    public void HideOnFlipRight()
-    {
-        rightFrontPanel.SetActive(false);
-    }
-
-    public void ShowModifierPage()
-    {
-        if (modifierPage != null)
-            modifierPage.SetActive(true);
-
-            rightBackPanel.SetActive(true);
-            leftBackPanel.SetActive(true);
-         
-
-            
-    }
-
-    public void HideModifierPage()
-    {
-        if (modifierPage != null)
-            modifierPage.SetActive(false);
-    }
-
-    public void ShowFrontLeft()
-    {
-        leftFrontPanel.SetActive(true);
-      
-    }
-
-    public void ShowFrontRight()
-    {
-        rightFrontPanel.SetActive(true);
-      
-    }
-    public void ShowFrontPage()
-{
-    leftFrontPanel.SetActive(true);
-    rightBackPanel.SetActive(true);
-     rightBackPanel.SetActive(false);
-      leftBackPanel.SetActive(false);
-}
 }

@@ -11,6 +11,8 @@ public enum CombatModifierType
     Range,
     Attack,
 
+    AvoidBonus,
+
 Accuracy,
 Avoid
 }

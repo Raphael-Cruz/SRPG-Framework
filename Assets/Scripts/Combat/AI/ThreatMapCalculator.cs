@@ -66,7 +66,7 @@ public class ThreatMapCalculator
         }
 
         Dictionary<GridTile, int> reachable =
-            movementCalculator.CalculateRange(enemy);
+            movementCalculator.CalculateRange(enemy).costs;
 
         foreach (GridTile destination in reachable.Keys)
         {

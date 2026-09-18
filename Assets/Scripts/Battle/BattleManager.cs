@@ -23,6 +23,13 @@ public class BattleManager : MonoBehaviour
     [SerializeField] private TurnManager turnManager;
     [SerializeField] private InitiativeOrderSystem initiativeOrder;
 
+    [Header("Conditions")]
+    [Tooltip("Lista de condições para o jogador ganhar. Se QUALQUER UMA for atingida, é Vitória.")]
+    public System.Collections.Generic.List<BattleCondition> winConditions;
+    
+    [Tooltip("Lista de condições para o jogador perder. Se QUALQUER UMA for atingida, é Derrota.")]
+    public System.Collections.Generic.List<BattleCondition> lossConditions;
+
     public BattleState State { get; private set; } = BattleState.Preparing;
 
     public event Action<BattleState> OnBattleStateChanged;
@@ -74,33 +81,51 @@ public class BattleManager : MonoBehaviour
     public void CheckBattleEnd()
     {
         if (State != BattleState.Fighting)
+        {
+            Debug.LogWarning($"CheckBattleEnd chamado mas o estado atual é {State}");
             return;
-
-        bool anyEnemyAlive = false;
-        bool anyPlayerAlive = false;
-
-        foreach (Unit unit in initiativeOrder.AllUnits)
-        {
-            if (unit == null || !unit.IsAlive)
-                continue;
-
-            if (unit.IsPlayerControlled)
-            {
-                anyPlayerAlive = true;
-            }
-            else
-            {
-                anyEnemyAlive = true;
-            }
         }
 
-        if (!anyEnemyAlive)
+        Debug.Log("Verificando fim de batalha...");
+
+        // Verifica primeiro as condições de Derrota
+        if (lossConditions != null && lossConditions.Count > 0)
         {
-            Victory();
+            foreach (var condition in lossConditions)
+            {
+                if (condition != null && condition.IsConditionMet(this))
+                {
+                    Debug.Log($"Condição de derrota atingida: {condition.name}");
+                    Defeat();
+                    return; // Interrompe pois a batalha acabou
+                }
+            }
         }
-        else if (!anyPlayerAlive)
+        else
         {
-            Defeat();
+            Debug.Log("Nenhuma condição de derrota configurada na lista Loss Conditions.");
+        }
+
+        // Se não perdeu, verifica as condições de Vitória
+        if (winConditions != null && winConditions.Count > 0)
+        {
+            foreach (var condition in winConditions)
+            {
+                if (condition != null)
+                {
+                    bool met = condition.IsConditionMet(this);
+                    Debug.Log($"Checando condição de vitória '{condition.name}': {met}");
+                    if (met)
+                    {
+                        Victory();
+                        return; // Interrompe pois a batalha acabou
+                    }
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("A lista Win Conditions está vazia ou nula no BattleManager!");
         }
     }
 
@@ -113,8 +138,11 @@ public class BattleManager : MonoBehaviour
         Debug.Log("Battle Won");
         OnVictory?.Invoke();
 
-        // Animation, rewards, and returning to the dungeon are handled by
-        // whatever UI/flow system is listening to OnVictory - not here.
+        // Retorna para a cena de exploração usando o GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReturnToExploration();
+        }
     }
 
 
@@ -126,8 +154,12 @@ public class BattleManager : MonoBehaviour
         Debug.Log("Battle Lost");
         OnDefeat?.Invoke();
 
-        // Game over screen, respawn, and checkpoint reload are handled by
-        // whatever flow system is listening to OnDefeat - not here.
+        // O ideal seria chamar GameManager.Instance.GoToGameOverScene()
+        // Mas como ainda não foi criada, vamos apenas voltar para a cena de exploração
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReturnToExploration();
+        }
     }
 
 

@@ -58,24 +58,29 @@ public class MovementRangeCalculator : MonoBehaviour
     }
 
 
-public void ShowMovementRange(Unit unit)
-{
-    ClearMovementRange();
+    private Dictionary<GridTile, GridTile> currentCameFrom = new Dictionary<GridTile, GridTile>();
 
-    Dictionary<GridTile, int> costs = CalculateRange(unit);
-
-    foreach (KeyValuePair<GridTile, int> entry in costs)
+    public void ShowMovementRange(Unit unit)
     {
-        currentCost[entry.Key] = entry.Value;
-        currentRange.Add(entry.Key);
-    }
+        ClearMovementRange();
 
-    foreach (GridTile tile in currentRange)
-    {
-        tile.SetMovementRange(true);
-    }
-}
+        var calculation = CalculateRange(unit);
+        Dictionary<GridTile, int> costs = calculation.costs;
+        Dictionary<GridTile, GridTile> cameFrom = calculation.cameFrom;
 
+        currentCameFrom = cameFrom;
+
+        foreach (KeyValuePair<GridTile, int> entry in costs)
+        {
+            currentCost[entry.Key] = entry.Value;
+            currentRange.Add(entry.Key);
+        }
+
+        foreach (GridTile tile in currentRange)
+        {
+            tile.SetMovementRange(true);
+        }
+    }
 
     public void ClearMovementRange()
     {
@@ -86,94 +91,110 @@ public void ShowMovementRange(Unit unit)
 
         currentRange.Clear();
         currentCost.Clear();
+        currentCameFrom.Clear();
     }
-
 
     public bool IsReachable(Unit unit, GridTile target)
     {
         if (unit == null || target == null)
             return false;
 
-        // currentCost is the source of truth now; currentRange only exists
-        // for driving the tile highlight visuals.
         return currentCost.ContainsKey(target);
     }
 
-
-    // ==========================
-    // Weighted range calculation (Dijkstra)
-    // ==========================
-
-    
-    
-    // Pure calculation, no visual side effects, no shared-state mutation.
-// Safe to call for AI evaluation without touching this instance's
-// currentCost/currentRange (which drive tile highlighting for whoever
-// owns this calculator).
-public Dictionary<GridTile, int> CalculateRange(Unit unit)
-{
-    int movement = unit.Data.MovementRange;
-
-    GridTile start = unit.CurrentTile;
-
-    Dictionary<GridTile, int> distance = new Dictionary<GridTile, int>();
-    HashSet<GridTile> visited = new HashSet<GridTile>();
-
-    List<(GridTile tile, int cost)> frontier = new List<(GridTile, int)>();
-
-    distance[start] = 0;
-    frontier.Add((start, 0));
-
-    while (frontier.Count > 0)
+    public List<GridTile> GetPath(GridTile target)
     {
-        int bestIndex = GetLowestCostIndex(frontier);
-        (GridTile current, int currentDistance) = frontier[bestIndex];
-        frontier.RemoveAt(bestIndex);
+        List<GridTile> path = new List<GridTile>();
 
-        if (visited.Contains(current))
-            continue;
+        if (target == null || (!currentCameFrom.ContainsKey(target) && !currentCost.ContainsKey(target)))
+            return path;
 
-        visited.Add(current);
-
-        foreach (GridTile neighbor in GridManager.Instance.GetNeighbors(current))
+        GridTile curr = target;
+        while (curr != null)
         {
-            if (visited.Contains(neighbor))
-                continue;
-
-            if (neighbor.Occupant != null)
-                continue;
-
-            int moveCost = costProvider.GetCost(unit, current, neighbor);
-
-            if (moveCost <= 0)
-                continue;
-
-            int newDistance = currentDistance + moveCost;
-
-            if (newDistance > movement)
-                continue;
-
-            if (!distance.TryGetValue(neighbor, out int knownDistance) ||
-                newDistance < knownDistance)
+            path.Add(curr);
+            if (currentCameFrom.TryGetValue(curr, out GridTile next))
             {
-                distance[neighbor] = newDistance;
-                frontier.Add((neighbor, newDistance));
+                curr = next;
+            }
+            else
+            {
+                break;
             }
         }
+
+        path.Reverse();
+        return path;
     }
 
-    Dictionary<GridTile, int> result = new Dictionary<GridTile, int>();
-
-    foreach (KeyValuePair<GridTile, int> entry in distance)
+    // Pure calculation, no visual side effects, no shared-state mutation.
+    public (Dictionary<GridTile, int> costs, Dictionary<GridTile, GridTile> cameFrom) CalculateRange(Unit unit)
     {
-        if (entry.Key == start)
-            continue;
+        int movement = unit.Data.MovementRange;
 
-        result[entry.Key] = entry.Value;
+        GridTile start = unit.CurrentTile;
+
+        Dictionary<GridTile, int> distance = new Dictionary<GridTile, int>();
+        Dictionary<GridTile, GridTile> cameFrom = new Dictionary<GridTile, GridTile>();
+        HashSet<GridTile> visited = new HashSet<GridTile>();
+
+        List<(GridTile tile, int cost)> frontier = new List<(GridTile, int)>();
+
+        distance[start] = 0;
+        cameFrom[start] = null;
+        frontier.Add((start, 0));
+
+        while (frontier.Count > 0)
+        {
+            int bestIndex = GetLowestCostIndex(frontier);
+            (GridTile current, int currentDistance) = frontier[bestIndex];
+            frontier.RemoveAt(bestIndex);
+
+            if (visited.Contains(current))
+                continue;
+
+            visited.Add(current);
+
+            foreach (GridTile neighbor in GridManager.Instance.GetNeighbors(current))
+            {
+                if (visited.Contains(neighbor))
+                    continue;
+
+                if (neighbor.Occupant != null)
+                    continue;
+
+                int moveCost = costProvider.GetCost(unit, current, neighbor);
+
+                if (moveCost <= 0)
+                    continue;
+
+                int newDistance = currentDistance + moveCost;
+
+                if (newDistance > movement)
+                    continue;
+
+                if (!distance.TryGetValue(neighbor, out int knownDistance) ||
+                    newDistance < knownDistance)
+                {
+                    distance[neighbor] = newDistance;
+                    cameFrom[neighbor] = current;
+                    frontier.Add((neighbor, newDistance));
+                }
+            }
+        }
+
+        Dictionary<GridTile, int> resultCosts = new Dictionary<GridTile, int>();
+
+        foreach (KeyValuePair<GridTile, int> entry in distance)
+        {
+            if (entry.Key == start)
+                continue;
+
+            resultCosts[entry.Key] = entry.Value;
+        }
+
+        return (resultCosts, cameFrom);
     }
-
-    return result;
-}
 
 
     private int GetLowestCostIndex(List<(GridTile tile, int cost)> frontier)

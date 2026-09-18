@@ -15,30 +15,58 @@ public class ArrowController : MonoBehaviour
 
     private Vector3 targetPosition;
 
+    public static ArrowController Instance { get; private set; }
+
+    private Unit currentTargetUnit;
+
     private void Awake()
     {
+        Instance = this;
         targetPosition = transform.position;
     }
 
     private void Update()
     {
+        // Se não tiver um alvo forçado, tentar seguir a unidade do turno
+        Unit unitToFollow = currentTargetUnit;
+        if (unitToFollow == null && TurnManager.Instance != null)
+        {
+            unitToFollow = TurnManager.Instance.CurrentUnit;
+        }
+
+        if (unitToFollow != null)
+        {
+            UpdateTargetPosition(unitToFollow);
+        }
+
         Move();
     }
 
-    public void SetTarget(GridTile tile)
+    public void ForceTarget(Unit unit)
     {
+        currentTargetUnit = unit;
+    }
+
+    public void ClearForcedTarget()
+    {
+        currentTargetUnit = null;
+    }
+
+    private void UpdateTargetPosition(Unit unit)
+    {
+        // Se a unidade está fazendo preview de movimento, pegamos a posição de onde ela vai parar
+        GridTile tile = unit.EffectiveTile;
+        if (tile == null)
+            return;
+
         targetPosition = tile.WorldPosition;
 
         float y = defaultHeight;
 
-        if (tile.Occupant != null)
+        Renderer renderer = unit.GetComponentInChildren<Renderer>();
+        if (renderer != null)
         {
-            Renderer renderer = tile.Occupant.GetComponentInChildren<Renderer>();
-
-            if (renderer != null)
-            {
-                y = renderer.bounds.max.y + unitOffset;
-            }
+            y = renderer.bounds.max.y + unitOffset;
         }
 
         targetPosition.y = y;

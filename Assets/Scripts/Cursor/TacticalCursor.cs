@@ -19,21 +19,17 @@ public class TacticalCursor : MonoBehaviour
             mouseSelector.HoveredTileChanged -= HandleHoveredTileChanged;
     }
 
-private void HandleHoveredTileChanged(GridTile tile)
-{
-    if(tile == null)
-        return;
-
-
-    if(UnitActionController.Instance.State ==
-       UnitActionState.SelectingAttackTarget)
+    private void HandleHoveredTileChanged(GridTile tile)
     {
-        if(!attackController.CanHoverTarget(tile))
+        if(tile == null)
             return;
+
+        if(UnitActionController.Instance.State == UnitActionState.SelectingAttackTarget)
+        {
+            if(!attackController.CanHoverTarget(tile))
+                return;
+        }
+
+        tileMarker.SetTarget(tile);
     }
-
-
-    tileMarker.SetTarget(tile);
-    arrow.SetTarget(tile);
-}
 }

@@ -96,37 +96,37 @@ public class CombatPreviewPageController : MonoBehaviour
     private IEnumerator HideRightRoutine()
     {
         yield return new WaitForSeconds(flipForwardDelayRightPanel);
-        combatPreviewUI.HideOnFlipRight();
+        // combatPreviewUI.HideOnFlipRight();
     }
 
     private IEnumerator HideLeftRoutine()
     {
         yield return new WaitForSeconds(flipForwardDelayLeftPanel);
-        combatPreviewUI.HideOnFlipLeft();
+        // combatPreviewUI.HideOnFlipLeft();
     }
 
     private IEnumerator ShowModifierRoutine()
     {
         yield return new WaitForSeconds(flipForwardDelayModifierPage);
-        combatPreviewUI.ShowModifierPage();
+        // combatPreviewUI.ShowModifierPage();
     }
 
     private IEnumerator HideModifierRoutine()
     {
         yield return new WaitForSeconds(flipBackwardDelayModifierPage);
-        combatPreviewUI.HideModifierPage();
+        // combatPreviewUI.HideModifierPage();
     }
 
     private IEnumerator ShowRightRoutine()
     {
         yield return new WaitForSeconds(flipBackwardDelayRightPanel);
-        combatPreviewUI.ShowFrontRight();
+        // combatPreviewUI.ShowFrontRight();
     }
 
     private IEnumerator ShowLeftRoutine()
     {
         yield return new WaitForSeconds(flipBackwardDelayLeftPanel);
-        combatPreviewUI.ShowFrontLeft();
+        // combatPreviewUI.ShowFrontLeft();
     }
 
     public void ResetToFront()

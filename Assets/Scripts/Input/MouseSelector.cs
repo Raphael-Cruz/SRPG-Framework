@@ -36,15 +36,20 @@ public class MouseSelector : MonoBehaviour
             return;
         }
 
-
         if (currentTile == null)
             return;
 
-
+        // While a movement destination is selected and waiting for confirmation,
+        // block ALL grid/unit clicks. Only the Confirm button or Enter should act.
+        if (UnitActionController.Instance != null &&
+            UnitActionController.Instance.State == UnitActionState.Moving &&
+            UnitMovementController.Instance != null &&
+            UnitMovementController.Instance.State == MovementState.Previewing)
+        {
+            return;
+        }
 
         Unit unit = currentTile.Occupant;
-
-
 
         // ==============================
         // Attack targeting has priority
@@ -127,17 +132,23 @@ public class MouseSelector : MonoBehaviour
         if (mainCamera == null)
             return null;
 
-
         Ray ray = mainCamera.ScreenPointToRay(
             InputManager.Instance.MousePosition
         );
 
-
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
+            // Se o raio bater diretamente em uma Unidade (o collider dela), 
+            // retornamos o tile onde a unidade está pisando!
+            // Isso previne que clicar na cabeça do personagem retorne o tile de trás.
+            Unit hitUnit = hit.collider.GetComponentInParent<Unit>();
+            if (hitUnit != null && hitUnit.CurrentTile != null)
+            {
+                return hitUnit.CurrentTile;
+            }
+
             return GridManager.Instance.GetTileFromWorldPosition(hit.point);
         }
-
 
         return null;
     }

@@ -61,7 +61,8 @@ public CombatPrediction PreviewAttack(
         attacker.Data.Attack,
         target.Data.Defense,
         attacker.Data.Accuracy,
-        target.Data.Avoid
+        target.Data.Avoid,
+        attacker.Data.Crit
     );
 
 
@@ -76,7 +77,7 @@ public CombatPrediction PreviewAttack(
 
 
     Debug.Log(
-        $"Combat Preview: {attacker.Data.UnitName} -> {target.Data.UnitName} | Damage: {CurrentPrediction.Damage} | Hit: {CurrentPrediction.HitChance}%"
+        $"Combat Preview: {attacker.Data.UnitName} -> {target.Data.UnitName} | Damage: {CurrentPrediction.MaxDamage} | Hit: {CurrentPrediction.HitChance}%"
     );
 
 

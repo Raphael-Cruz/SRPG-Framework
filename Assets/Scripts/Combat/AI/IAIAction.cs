@@ -5,5 +5,5 @@ public interface IAIAction
 
     AIActionOutcome Predict();
 
-    void Execute();
+    void Execute(System.Action onComplete);
 }

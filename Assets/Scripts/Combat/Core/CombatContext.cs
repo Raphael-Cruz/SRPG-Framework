@@ -11,8 +11,10 @@ public class CombatContext
     public int Defense { get; }
 
     public int Accuracy { get; }
-
     public int Avoid { get; }
+    public int Crit { get; }
+
+    public TimeOfDay CurrentTime { get; set; }
 
     public CombatContext(
         Unit attacker,
@@ -20,7 +22,8 @@ public class CombatContext
         int attack,
         int defense,
         int accuracy,
-        int avoid)
+        int avoid,
+        int crit)
     {
         Attacker = attacker;
         Defender = defender;
@@ -30,5 +33,15 @@ public class CombatContext
 
         Accuracy = accuracy;
         Avoid = avoid;
+        Crit = crit;
     }
+
+    
 }
+
+public enum TimeOfDay 
+{
+    Day,
+    Night
+}
+

@@ -1,0 +1,1 @@
+Import the package 'HDRP_Import_Extra_Fogs_' to get the extra, separate sky and fog settings for each camera as showcased in the Asset Store.

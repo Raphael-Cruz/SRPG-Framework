@@ -81,6 +81,7 @@ public class UnitManager : MonoBehaviour
             return null;
         }
 
+        unit.Initialize(data);
         unit.SetTile(tile);
 
         RegisterUnit(unit, tile);

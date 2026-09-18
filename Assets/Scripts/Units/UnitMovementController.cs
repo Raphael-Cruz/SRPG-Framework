@@ -1,251 +1,257 @@
 using UnityEngine;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+
 public class UnitMovementController : MonoBehaviour
 {
+    public static UnitMovementController Instance { get; private set; }
+
     [SerializeField] private MovementRangeCalculator movementRange;
+    [SerializeField] private PathRenderer pathRenderer;
+
+    [Tooltip("Tiles per second the unit walks.")]
+    [SerializeField] private float moveSpeed = 6f;
 
     private Unit movingUnit;
-
     private GridTile originalTile;
-    private GridTile previewTile;
+    private GridTile selectedTile;
+    private List<GridTile> cachedPath;
 
+    public MovementState State { get; private set; } = MovementState.None;
 
-    public MovementState State { get; private set; }
-        = MovementState.None;
+    public event Action<Unit> OnMovementConfirmed;
+    public event Action<Unit> OnPreviewStarted;
+    public event Action OnPreviewEnded;
 
-public event Action<Unit> OnMovementConfirmed;
-
-
-// Fired when a tile is previewed (Confirm button should appear) and when
-// that preview ends, whether confirmed or cancelled (Confirm button
-// should disappear). Kept separate from OnMovementConfirmed since a UI
-// button caring "is there a preview to confirm right now" needs to know
-// about cancellation too, not just confirmation.
-public event Action<Unit> OnPreviewStarted;
-public event Action OnPreviewEnded;
-
-
-private void Start()
-{
-    InputManager.Instance.ConfirmPressed += HandleConfirmPressed;
-}
-
-
-private void OnDisable()
-{
-    if (InputManager.Instance != null)
+    private void Awake()
     {
-        InputManager.Instance.ConfirmPressed -= HandleConfirmPressed;
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
     }
-}
 
-
-private void HandleConfirmPressed()
-{
-    if (State == MovementState.Previewing)
+    private void Start()
     {
-        ConfirmMove();
+        InputManager.Instance.ConfirmPressed += HandleConfirmPressed;
+
+        MouseSelector mouseSelector = FindObjectOfType<MouseSelector>();
+        if (mouseSelector != null)
+            mouseSelector.HoveredTileChanged += HandleHoveredTileChanged;
     }
-}
+
+    private void OnDisable()
+    {
+        if (InputManager.Instance != null)
+            InputManager.Instance.ConfirmPressed -= HandleConfirmPressed;
+
+        MouseSelector mouseSelector = FindObjectOfType<MouseSelector>();
+        if (mouseSelector != null)
+            mouseSelector.HoveredTileChanged -= HandleHoveredTileChanged;
+    }
+
+    // -------------------------------------------------------
+    // Public API
+    // -------------------------------------------------------
+
     public void BeginMovement(Unit unit)
     {
         Debug.Log("UnitMovementController.BeginMovement");
-        if(unit == null)
-            return;
+        if (unit == null || !unit.CanMove) return;
 
+        movingUnit   = unit;
+        originalTile = unit.CurrentTile;
+        selectedTile = null;
+        cachedPath   = null;
 
-        if(!unit.CanMove)
+        State = MovementState.SelectingDestination;
+        movementRange.ShowMovementRange(unit);
+    }
+
+    public void HandleTileClick(GridTile clickedTile)
+    {
+        if (State != MovementState.SelectingDestination) return;
+        if (clickedTile == null) return;
+        if (!movementRange.IsReachable(movingUnit, clickedTile))
         {
-            Debug.Log("Unit already moved.");
+            Debug.Log("Invalid movement tile.");
             return;
         }
 
-
-        movingUnit = unit;
-
-        originalTile = unit.CurrentTile;
-        previewTile = null;
-
-
-        State = MovementState.SelectingDestination;
-
-
-        movementRange.ShowMovementRange(unit);
-
-
-        Debug.Log($"{unit.name} choosing movement");
+        SelectDestination(clickedTile);
     }
 
-
-
-
-private void PreviewMove(GridTile tile)
-{
-    previewTile = tile;
-
-
-    movingUnit.SetPreviewTile(tile);
-
-
-    movingUnit.transform.position =
-        tile.WorldPosition;
-
-
-    movementRange.ClearMovementRange();
-
-
-    State = MovementState.Previewing;
-      Debug.Log("Invoking Preview Started");
-
-
-    OnPreviewStarted?.Invoke(movingUnit);
-
-
-    Debug.Log(
-        $"Preview move to ({tile.X},{tile.Y})"
-    );
-}
-
-
-
-
-public void ConfirmMove()
-{
-    if(State != MovementState.Previewing)
-        return;
-
-
-    movingUnit.MoveTo(previewTile);
-
-    movingUnit.ClearPreviewTile();
-
-
-    movementRange.ClearMovementRange();
-
-
-    Debug.Log(
-        $"Movement confirmed to ({previewTile.X},{previewTile.Y})"
-    );
-
-Debug.Log("UnitMovementController -> ConfirmMove");
-    OnMovementConfirmed?.Invoke(movingUnit);
-
-    OnPreviewEnded?.Invoke();
-
-
-    // Without this, State stays MovementCommitted forever and future code
-    // has to remember that "MovementCommitted" actually means "idle".
-    movingUnit = null;
-    previewTile = null;
-    originalTile = null;
-
-    State = MovementState.None;
-}
-
-
-public bool CancelMove()
-{
-    if (State == MovementState.None)
-        return false;
-
-
-    // Case 1:
-    // Player already previewed a destination.
-    if (State == MovementState.Previewing)
+    public void ConfirmMove()
     {
-        movingUnit.transform.position =
-            originalTile.WorldPosition;
+        Debug.Log($"ConfirmMove called. State={State}, cachedPath={(cachedPath == null ? "NULL" : cachedPath.Count.ToString())}");
+        if (State != MovementState.Previewing) return;
 
+        Unit           unit        = movingUnit;
+        GridTile       destination = selectedTile;
+        List<GridTile> path        = cachedPath;
 
-        movingUnit.ClearPreviewTile();
+        if (path == null)
+        {
+            Debug.LogError("ConfirmMove: cachedPath is NULL! Aborting.");
+            return;
+        }
 
-        previewTile = null;
-
-
-        movementRange.ShowMovementRange(movingUnit);
-
-
-        State = MovementState.SelectingDestination;
-
-
-        Debug.Log("Movement preview cancelled");
+        // Clear state BEFORE the coroutine
+        movingUnit   = null;
+        selectedTile = null;
+        cachedPath   = null;
+        State        = MovementState.None;
 
         OnPreviewEnded?.Invoke();
 
-        return true;
+        Debug.Log($"Starting WalkRoutine for {unit.name} with {path.Count} steps.");
+        StartCoroutine(WalkRoutine(unit, destination, path));
     }
 
-
-    // Case 2:
-    // Player opened movement but has not selected a tile yet.
-    if (State == MovementState.SelectingDestination)
+    public bool CancelMove()
     {
+        if (State == MovementState.None) return false;
+
+        if (pathRenderer != null) pathRenderer.ClearPath();
+
+        if (State == MovementState.Previewing)
+        {
+            movingUnit.ClearPreviewTile();
+            selectedTile = null;
+            cachedPath   = null;
+
+            movementRange.ShowMovementRange(movingUnit);
+            State = MovementState.SelectingDestination;
+            OnPreviewEnded?.Invoke();
+            return true;
+        }
+
+        if (State == MovementState.SelectingDestination)
+        {
+            movementRange.ClearMovementRange();
+            movingUnit   = null;
+            selectedTile = null;
+            originalTile = null;
+            cachedPath   = null;
+            State        = MovementState.None;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void ResumeMovement()
+    {
+        if (movingUnit == null)
+            movingUnit = UnitActionController.Instance.SelectedUnit;
+        if (movingUnit == null || !movingUnit.CanMove) return;
+
+        originalTile = movingUnit.CurrentTile;
+        selectedTile = null;
+        cachedPath   = null;
+
+        movementRange.ShowMovementRange(movingUnit);
+        State = MovementState.SelectingDestination;
+
+        Debug.Log($"{movingUnit.name} returned to movement selection.");
+    }
+
+    // -------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------
+
+    private void HandleHoveredTileChanged(GridTile tile)
+    {
+        if (State != MovementState.SelectingDestination) return;
+
+        if (tile == null || !movementRange.IsReachable(movingUnit, tile))
+        {
+            if (pathRenderer != null) pathRenderer.ClearPath();
+            return;
+        }
+
+        if (pathRenderer != null)
+            pathRenderer.DrawPath(BuildDisplayPath(tile));
+    }
+
+    private void HandleConfirmPressed()
+    {
+        if (State == MovementState.Previewing) ConfirmMove();
+    }
+
+    private void SelectDestination(GridTile tile)
+    {
+        if (pathRenderer != null) pathRenderer.ClearPath();
+
+        // Build and cache path NOW — before ClearMovementRange wipes cameFrom data!
+        List<GridTile> raw = movementRange.GetPath(tile);
+        // GetPath includes the origin tile. Remove it — unit is already there.
+        if (raw.Count > 0 && raw[0] == originalTile)
+            raw.RemoveAt(0);
+        cachedPath   = raw;
+        selectedTile = tile;
+
+        movingUnit.SetPreviewTile(tile);
         movementRange.ClearMovementRange();
+        State = MovementState.Previewing;
 
-
-        movingUnit = null;
-        previewTile = null;
-        originalTile = null;
-
-
-        State = MovementState.None;
-
-
-        Debug.Log("Movement selection cancelled");
-
-
-        return true;
+        Debug.Log($"Destination selected ({tile.X},{tile.Y}), walk steps = {cachedPath.Count}");
+        OnPreviewStarted?.Invoke(movingUnit);
     }
 
-
-    return false;
-}
-
-public void HandleTileClick(GridTile clickedTile)
-{
-    if (State != MovementState.SelectingDestination)
-        return;
-
-    if (clickedTile == null)
-        return;
-
-    if (!movementRange.IsReachable(movingUnit, clickedTile))
+    /// Path including origin for the path-renderer display (shows full line on hover).
+    private List<GridTile> BuildDisplayPath(GridTile target)
     {
-        Debug.Log("Invalid movement.");
-        return;
+        List<GridTile> path = movementRange.GetPath(target);
+        if (path.Count > 0 && path[0] != originalTile)
+            path.Insert(0, originalTile);
+        return path;
     }
 
-    PreviewMove(clickedTile);
-}
-
-public void ResumeMovement()
-{
-    if (movingUnit == null)
+    private IEnumerator WalkRoutine(Unit unit, GridTile destination, List<GridTile> path)
     {
-        movingUnit = UnitActionController.Instance.SelectedUnit;
+        Debug.Log($"WalkRoutine start: {unit.name}, steps = {path.Count}");
+
+        if (path.Count > 0)
+        {
+            unit.Visual?.SetWalking(true);
+
+            foreach (GridTile step in path)
+            {
+                Vector3 targetPos = step.WorldPosition;
+
+                // Face the direction of movement instantly
+                Vector3 dir = targetPos - unit.transform.position;
+                dir.y = 0f;
+                if (dir.sqrMagnitude > 0.001f)
+                    unit.transform.rotation = Quaternion.LookRotation(dir.normalized);
+
+                // Slide to tile
+                while (Vector3.Distance(unit.transform.position, targetPos) > 0.01f)
+                {
+                    unit.transform.position = Vector3.MoveTowards(
+                        unit.transform.position, targetPos, moveSpeed * Time.deltaTime);
+                    yield return null;
+                }
+                unit.transform.position = targetPos;
+            }
+
+            unit.Visual?.SetWalking(false);
+        }
+
+        // Commit tile occupancy & state (does NOT teleport — position is already correct)
+        unit.CommitMove(destination);
+
+        ApplyTerrainModifier(unit, destination);
+
+        Debug.Log($"WalkRoutine done. Firing OnMovementConfirmed.");
+        OnMovementConfirmed?.Invoke(unit);
     }
 
-    if (movingUnit == null)
-        return;
-
-    if (!movingUnit.CanMove)
-        return;
-
-
-    // Restore movement context
-    originalTile = movingUnit.CurrentTile;
-    previewTile = null;
-
-
-    movementRange.ShowMovementRange(movingUnit);
-
-
-    State = MovementState.SelectingDestination;
-
-
-    Debug.Log(
-        $"{movingUnit.name} returned to movement selection."
-    );
-}
-
+    private void ApplyTerrainModifier(Unit unit, GridTile tile)
+    {
+        CombatModifier terrainMod = null;
+        if (tile != null && tile.gameObject.name.Contains("Grass"))
+            terrainMod = new GrassTerrainModifier(10f);
+        unit.SetTerrainModifier(terrainMod);
+    }
 }

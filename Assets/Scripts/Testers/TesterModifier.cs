@@ -8,7 +8,7 @@ public class TesterModifier : MonoBehaviour
 
     private void Start()
     {
-        TestModifiers();
+        // TestModifiers(); // Desabilitado temporariamente (UI refatorada)
     }
 
 

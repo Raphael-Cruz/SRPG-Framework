@@ -16,6 +16,19 @@ public class InputManager : MonoBehaviour
 
     public Vector2 MouseScroll =>
     inputActions.Player.CameraZoom.ReadValue<Vector2>();
+
+    // Exploration-mode movement/look, driven by the New Input System.
+    // BasicBehaviour, MoveBehaviour and ThirdPersonOrbitCamBasic read
+    // these instead of the legacy UnityEngine.Input axis calls.
+    public Vector2 MoveInput =>
+        inputActions.Player.Move.ReadValue<Vector2>();
+
+    public Vector2 LookInput =>
+        inputActions.Player.Look.ReadValue<Vector2>();
+
+    public bool JumpPressedThisFrame =>
+        inputActions.Player.Jump.WasPressedThisFrame();
+
     public event Action LeftClick;
 
     // Confirm/Cancel for gameplay flows that sit outside the UI button
@@ -42,16 +55,20 @@ public class InputManager : MonoBehaviour
 
     private void OnEnable()
     {
-        inputActions.Enable();
-
-        inputActions.Player.Click.performed += OnLeftClick;
+        if (inputActions != null)
+        {
+            inputActions.Enable();
+            inputActions.Player.Click.performed += OnLeftClick;
+        }
     }
 
     private void OnDisable()
     {
-        inputActions.Player.Click.performed -= OnLeftClick;
-
-        inputActions.Disable();
+        if (inputActions != null)
+        {
+            inputActions.Player.Click.performed -= OnLeftClick;
+            inputActions.Disable();
+        }
     }
 
     private void Update()

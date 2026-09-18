@@ -12,8 +12,9 @@ public class GridTile : MonoBehaviour
     private Color defaultColor;
 
     private Unit occupant;
-
     public Unit Occupant => occupant;
+
+    public bool IsWalkable => !isBlocked && occupant == null;
 
 
     // Highlight states
@@ -32,6 +33,10 @@ public class GridTile : MonoBehaviour
         {
             defaultColor = tileRenderer.material.color;
         }
+
+        // Shrink slightly to create the gap effect between tiles (like Fire Emblem)
+        // If your tile is 1x1, scaling it to 0.95 gives a 5% margin around it.
+        transform.localScale = new Vector3(0.9f, transform.localScale.y, 0.9f);
     }
 
 
@@ -41,6 +46,9 @@ public class GridTile : MonoBehaviour
         Y = y;
 
         gameObject.name = $"Tile ({X}, {Y})";
+
+        // Garante que o tile comece invisível, mostrando apenas o terreno
+        ClearHighlights();
     }
 
 
@@ -101,45 +109,53 @@ public class GridTile : MonoBehaviour
         if (tileRenderer == null)
             return;
 
+        // Por padrão, esconde a malha para não cobrir o terreno
+        tileRenderer.enabled = false;
 
         // Priority order
-
-        if (isBlocked)
+        
+        if (isSelected)
         {
-            tileRenderer.material.color = Color.gray;
+            tileRenderer.enabled = true;
+            tileRenderer.material.color = new Color(1f, 1f, 0f, 0.6f); // Yellow with alpha
             return;
         }
-
 
         if (isAttackRange)
         {
-            tileRenderer.material.color = Color.red;
+            tileRenderer.enabled = true;
+            tileRenderer.material.color = new Color(1f, 0f, 0f, 0.5f); // Red with alpha
             return;
         }
-
 
         if (isHealingRange)
         {
-            tileRenderer.material.color = Color.green;
+            tileRenderer.enabled = true;
+            tileRenderer.material.color = new Color(0f, 1f, 0f, 0.5f); // Green with alpha
             return;
         }
-
 
         if (isMovementRange)
         {
-            tileRenderer.material.color = Color.blue;
+            tileRenderer.enabled = true;
+            tileRenderer.material.color = new Color(0f, 0.4f, 1f, 0.5f); // Blue with alpha
             return;
         }
 
-
-        if (isSelected)
+        // isBlocked normalmente não deve ser desenhado permanentemente para não deixar
+        // a cena cheia de quadrados cinzas nas árvores. Mas se você quiser ver os bloqueios
+        // enquanto depura o jogo, você pode descomentar as linhas abaixo:
+        /*
+        if (isBlocked)
         {
-            tileRenderer.material.color = Color.yellow;
+            tileRenderer.enabled = true;
+            tileRenderer.material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Cinza semitransparente
             return;
         }
+        */
 
-
-        tileRenderer.material.color = defaultColor;
+        // Se chegou aqui, nenhuma cor especial está ativa. 
+        // A malha continuará invisível (enabled = false).
     }
 
 

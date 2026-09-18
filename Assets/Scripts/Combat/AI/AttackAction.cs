@@ -26,7 +26,8 @@ public class AttackAction : IAIAction
                 Actor.Data.Attack,
                 Target.Data.Defense,
                 Actor.Data.Accuracy,
-                Target.Data.Avoid
+                Target.Data.Avoid,
+                Actor.Data.Crit
             );
 
         CombatPrediction prediction =
@@ -36,15 +37,15 @@ public class AttackAction : IAIAction
             new AIActionOutcome(prediction);
 
         bool willKill =
-            prediction.DefenderGauge.CurrentHP - prediction.Damage <= 0;
+            prediction.DefenderGauge.CurrentHP - prediction.MaxDamage <= 0;
 
         outcome.Set("WillKill", willKill);
 
         return outcome;
     }
 
-    public void Execute()
+    public void Execute(System.Action onComplete)
     {
-        CombatSystem.Instance.Attack(Actor, Target);
+        CombatSystem.Instance.Attack(Actor, Target, onComplete);
     }
 }

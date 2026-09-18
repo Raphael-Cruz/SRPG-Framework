@@ -30,7 +30,7 @@ public class AIActionGenerator
             threatMapCalculator.GetThreatMap(enemies);
 
         actions.AddRange(GenerateAttackActions(unit));
-        GenerateMoveCandidates(unit, threatMap, actions);
+        GenerateMoveCandidates(unit, threatMap, actions, enemies);
         actions.Add(GenerateWaitAction(unit, threatMap));
 
         return actions;
@@ -87,10 +87,12 @@ public class AIActionGenerator
     private void GenerateMoveCandidates(
         Unit unit,
         Dictionary<GridTile, int> threatMap,
-        List<IAIAction> actions)
+        List<IAIAction> actions,
+        IReadOnlyList<Unit> enemies)
     {
-        Dictionary<GridTile, int> reachableTiles =
-            movementCalculator.CalculateRange(unit);
+        var calculation = movementCalculator.CalculateRange(unit);
+        Dictionary<GridTile, int> reachableTiles = calculation.costs;
+        Dictionary<GridTile, GridTile> cameFrom = calculation.cameFrom;
 
         threatMap.TryGetValue(unit.CurrentTile, out int currentThreat);
 
@@ -113,21 +115,49 @@ public class AIActionGenerator
 
             threatMap.TryGetValue(destination, out int destinationThreat);
 
-            bool opensAttack = bestPrediction != null;
-            bool isSafer = destinationThreat < currentThreat;
-
-            if (opensAttack || isSafer)
+            int minDistance = int.MaxValue;
+            foreach (Unit enemy in enemies)
             {
-                actions.Add(
-                    new MoveAction(
-                        unit,
-                        destination,
-                        cost,
-                        bestPrediction,
-                        destinationThreat
-                    )
-                );
+                if (enemy.CurrentTile == null) continue;
+                int dist = System.Math.Abs(enemy.CurrentTile.X - destination.X) + System.Math.Abs(enemy.CurrentTile.Y - destination.Y);
+                if (dist < minDistance) minDistance = dist;
             }
+
+            // Reconstruct path locally since MovementRangeCalculator.GetPath relies on shared state 
+            // that is only populated when ShowMovementRange is called for the player.
+            List<GridTile> path = new List<GridTile>();
+            GridTile curr = destination;
+            while (curr != null)
+            {
+                path.Add(curr);
+                if (cameFrom.TryGetValue(curr, out GridTile next))
+                {
+                    curr = next;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            path.Reverse();
+            
+            // Remove the origin tile if present so unit doesn't animate standing still
+            if (path.Count > 0 && path[0] == unit.CurrentTile)
+            {
+                path.RemoveAt(0);
+            }
+
+            actions.Add(
+                new MoveAction(
+                    unit,
+                    destination,
+                    path,
+                    cost,
+                    bestPrediction,
+                    destinationThreat,
+                    minDistance
+                )
+            );
         }
     }
 
@@ -146,12 +176,13 @@ public class AIActionGenerator
                     attacker.Data.Attack,
                     target.Data.Defense,
                     attacker.Data.Accuracy,
-                    target.Data.Avoid
+                    target.Data.Avoid,
+                    attacker.Data.Crit
                 );
 
             CombatPrediction prediction = simulator.Simulate(context);
 
-            if (best == null || prediction.Damage > best.Damage)
+            if (best == null || prediction.MaxDamage > best.MaxDamage)
             {
                 best = prediction;
             }

@@ -45,6 +45,11 @@ public class UnitVisual : MonoBehaviour
     private bool isExhausted;
     private bool isActiveTurn;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string attackTriggerName = "Attack";
+    [SerializeField] private string deathTriggerName = "Death1";
+
 
     private void Awake()
     {
@@ -57,8 +62,35 @@ public class UnitVisual : MonoBehaviour
         {
             baseColor = targetRenderer.material.color;
         }
+        
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+        
+        if (animator != null)
+        {
+            animator.applyRootMotion = false;
+        }
     }
 
+    public void SetWalking(bool isWalking)
+    {
+        if (animator == null)
+        {
+            Debug.LogError($"[UnitVisual] animator is NULL on '{gameObject.name}'");
+            return;
+        }
+        animator.SetBool("IsWalking", isWalking);
+    }
+
+    public void TriggerAttack()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger(attackTriggerName);
+        }
+    }
 
     public void Select()
     {
@@ -73,6 +105,14 @@ public class UnitVisual : MonoBehaviour
         UpdateVisual();
     }
 
+
+    public void TriggerDeath()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger(deathTriggerName);
+        }
+    }
 
     // Called once when the unit spends its movement/action this turn, and
     // again with false when the turn system resets it for its next turn.
@@ -90,6 +130,21 @@ public class UnitVisual : MonoBehaviour
     public void SetActiveTurn(bool value)
     {
         isActiveTurn = value;
+        if (animator != null)
+        {
+            // By passing this bool, the animator can use it as a condition
+            // to prevent Idle2 and Idle3 from playing during the unit's turn
+            // Parameter name should match the animator parameter (e.g. "isActiveTurn")
+            // Unity usually ignores if the parameter doesn't exist, but it's safe to set.
+            foreach (var p in animator.parameters)
+            {
+                if (p.name == "isActiveTurn" && p.type == AnimatorControllerParameterType.Bool)
+                {
+                    animator.SetBool("isActiveTurn", value);
+                    break;
+                }
+            }
+        }
         UpdateVisual();
     }
 

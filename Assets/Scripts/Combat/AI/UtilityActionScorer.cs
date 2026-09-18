@@ -37,9 +37,9 @@ public class UtilityActionScorer : IAIActionScorer
         }
 
         float expectedDamage =
-            prediction.Damage * (prediction.HitChance / 100f);
+            prediction.MaxDamage * (prediction.HitChance / 100f);
 
-        float score = expectedDamage * profile.DamageWeight;
+        float score = (expectedDamage * profile.DamageWeight) + 1000f; // Prioritize attacking
 
         if (outcome.TryGet("WillKill", out bool willKill) && willKill)
         {
@@ -66,6 +66,15 @@ public class UtilityActionScorer : IAIActionScorer
             score += expectedDamage
                 * profile.DamageWeight
                 * profile.MoveOpportunityDiscount;
+                
+            score += 500f; // Prioritize moving to attack
+        }
+        else
+        {
+            if (outcome.TryGet("DistanceToEnemy", out int distance))
+            {
+                score += (100f - distance) * 2f; // Pursue player
+            }
         }
 
         score -= threat * profile.ThreatWeight;

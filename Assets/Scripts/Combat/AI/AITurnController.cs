@@ -52,13 +52,21 @@ private void HandleThreatChangingEvent(Unit unit)
 
     public void RunTurn(Unit unit)
     {
+        StartCoroutine(RunTurnRoutine(unit));
+    }
+
+    private System.Collections.IEnumerator RunTurnRoutine(Unit unit)
+    {
+        // Wait 1 second before doing anything (allows Idle1 to play)
+        yield return new WaitForSeconds(1.0f);
+
         BattlefieldSnapshot snapshot = perception.Observe(unit);
 
         if (snapshot.Enemies.Count == 0)
         {
             Debug.Log($"{unit.name}: no enemies observed, ending turn.");
             TurnManager.Instance.EndTurn(unit);
-            return;
+            yield break;
         }
 
         AIActionGenerator generator =
@@ -72,26 +80,25 @@ private void HandleThreatChangingEvent(Unit unit)
 
         IAIActionScorer scorer = new UtilityActionScorer(defaultProfile);
 
-        // Pass 1: choose the best action available - attack, a move
-        // that sets one up or plays safer, or explicitly waiting.
+        // Pass 1: choose the best action available
         List<IAIAction> initialActions =
             generator.GenerateActions(unit, snapshot.Enemies);
-        ExecuteBest(initialActions, scorer, unit);
+        yield return StartCoroutine(ExecuteBest(initialActions, scorer, unit));
 
-        // Pass 2: if the unit moved but can still act, re-evaluate
-        // attacks from its new position - including declining to
-        // attack if nothing found is worth it.
+        // Pass 2: follow-up actions if still can act
         if (unit.CanAct)
         {
             List<IAIAction> followUpActions =
                 generator.GenerateAttackActionsWithWait(unit, snapshot.Enemies);
-            ExecuteBest(followUpActions, scorer, unit);
+            yield return StartCoroutine(ExecuteBest(followUpActions, scorer, unit));
         }
 
+        // Add a tiny delay before ending turn so animations can start
+        yield return new WaitForSeconds(0.1f);
         TurnManager.Instance.EndTurn(unit);
     }
 
-    private void ExecuteBest(
+    private System.Collections.IEnumerator ExecuteBest(
         List<IAIAction> actions,
         IAIActionScorer scorer,
         Unit unit)
@@ -114,7 +121,11 @@ private void HandleThreatChangingEvent(Unit unit)
         if (bestAction != null)
         {
             Debug.Log($"{unit.name} chose an action, score {bestScore}");
-            bestAction.Execute();
+            bool actionComplete = false;
+            bestAction.Execute(() => actionComplete = true);
+            
+            // Wait until the action's callback is invoked
+            yield return new WaitUntil(() => actionComplete);
         }
     }
 }

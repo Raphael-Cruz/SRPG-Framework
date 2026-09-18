@@ -33,7 +33,15 @@ public class UnitSpawnerTest : MonoBehaviour
                 $"Cannot spawn {data.UnitName}. " +
                 $"Tile ({x},{y}) does not exist."
             );
+            return null;
+        }
 
+        if (!tile.IsWalkable)
+        {
+            Debug.LogWarning(
+                $"Cannot spawn {data.UnitName}. " +
+                $"Tile ({x},{y}) is blocked."
+            );
             return null;
         }
 

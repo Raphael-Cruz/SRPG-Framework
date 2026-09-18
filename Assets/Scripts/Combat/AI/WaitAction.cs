@@ -20,10 +20,11 @@ public class WaitAction : IAIAction
         return outcome;
     }
 
-    public void Execute()
+    public void Execute(System.Action onComplete)
     {
         // Deliberately does nothing. Doing nothing needs to be a
         // candidate the scorer can choose - not just what happens
         // by accident when every other action scored worse.
+        onComplete?.Invoke();
     }
 }

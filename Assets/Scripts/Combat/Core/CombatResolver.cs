@@ -15,7 +15,9 @@ public class CombatResolver
 
         foreach (CombatModifier modifier in modifiers)
         {
+            // Passamos o 'context' para que o modificador possa avaliar o ambiente
             ApplyModifier(
+                context, 
                 modifier,
                 ref finalAttack,
                 ref finalDefense,
@@ -24,10 +26,10 @@ public class CombatResolver
             );
         }
 
-        int finalDamage = Mathf.Max(
-            finalAttack - finalDefense,
-            1
-        );
+        // Temporary calculation for damage range and crit
+        int maxDamage = Mathf.Max(finalAttack - finalDefense, 1);
+        int minDamage = Mathf.Max(maxDamage - 4, 1); // Variando um pouco o dano, provisório
+        int finalCritChance = Mathf.Clamp(context.Crit, 0, 100);
 
         int finalHitChance = Mathf.Clamp(
             finalAccuracy - finalAvoid,
@@ -39,32 +41,53 @@ public class CombatResolver
         // HP Prediction
         // -------------------------
 
-HPGaugeState attackerGauge =
-    new HPGaugeState(
-        context.Attacker.CurrentHP,
-        context.Attacker.Data.MaxHP,
-        0
-    );
+        HPGaugeState attackerGauge =
+            new HPGaugeState(
+                context.Attacker.CurrentHP,
+                context.Attacker.Data.MaxHP,
+                0
+            );
 
+        HPGaugeState defenderGauge =
+            new HPGaugeState(
+                context.Defender.CurrentHP,
+                context.Defender.Data.MaxHP,
+                maxDamage // showing max potential damage
+            );
 
-HPGaugeState defenderGauge =
-    new HPGaugeState(
-        context.Defender.CurrentHP,
-        context.Defender.Data.MaxHP,
-        finalDamage
-    );
+        // -------------------------
+        // SP Prediction
+        // -------------------------
+
+        SPGaugeState attackerSPGauge =
+            new SPGaugeState(
+                context.Attacker.CurrentSP,
+                context.Attacker.Data.MaxSP,
+                0
+            );
+
+        SPGaugeState defenderSPGauge =
+            new SPGaugeState(
+                context.Defender.CurrentSP,
+                context.Defender.Data.MaxSP,
+                0
+            );
 
         CombatPrediction prediction =
             new CombatPrediction(
                 true,
                 finalAttack,
                 finalDefense,
-                finalDamage,
+                minDamage,
+                maxDamage,
                 finalAccuracy,
                 finalAvoid,
                 finalHitChance,
+                finalCritChance,
                 attackerGauge,
-                defenderGauge
+                defenderGauge,
+                attackerSPGauge,
+                defenderSPGauge
             );
 
         foreach (CombatModifier modifier in modifiers)
@@ -76,36 +99,40 @@ HPGaugeState defenderGauge =
     }
 
     private void ApplyModifier(
+        CombatContext context,
         CombatModifier modifier,
         ref int attack,
         ref int defense,
         ref int accuracy,
         ref int avoid)
     {
+        // O valor base (ou dinâmico, se for um terreno como a Grama à noite) é resolvido aqui
+        int modValue = modifier.GetContextualValue(context);
+
         switch (modifier.Type)
         {
             case CombatModifierType.Attack:
-                attack += Mathf.RoundToInt(modifier.Value);
+                attack += modValue;
                 break;
 
             case CombatModifierType.Defense:
-                defense += Mathf.RoundToInt(modifier.Value);
+                defense += modValue;
                 break;
 
             case CombatModifierType.Accuracy:
-                accuracy += Mathf.RoundToInt(modifier.Value);
+                accuracy += modValue;
                 break;
 
             case CombatModifierType.Avoid:
-                avoid += Mathf.RoundToInt(modifier.Value);
+                avoid += modValue; 
                 break;
 
             case CombatModifierType.Damage:
-                attack += Mathf.RoundToInt(modifier.Value);
+                attack += modValue;
                 break;
 
             case CombatModifierType.HitChance:
-                accuracy += Mathf.RoundToInt(modifier.Value);
+                accuracy += modValue;
                 break;
         }
     }

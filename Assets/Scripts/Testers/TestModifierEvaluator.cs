@@ -6,7 +6,7 @@ public class TestModifierEvaluator : ICombatEvaluator
     CombatContext context,
     CombatFacts facts)
 {
-    Debug.Log("TestModifierEvaluator executed");
+    // Debug.Log("TestModifierEvaluator executed");
 
     return new CombatModifier(
         CombatModifierType.HitChance,

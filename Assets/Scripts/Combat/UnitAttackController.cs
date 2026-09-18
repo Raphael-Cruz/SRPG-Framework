@@ -62,19 +62,21 @@ private void ExecuteAttack()
             );
     }
 
-    CombatSystem.Instance.Attack(
-        attackingUnit,
-        targetUnit
-    );
-
-    ClearTargetPreview();
-
     Unit attacker = attackingUnit;
 
-    attackingUnit = null;
-    State = AttackState.None;
+    CombatSystem.Instance.Attack(
+        attackingUnit,
+        targetUnit,
+        () => 
+        {
+            ClearTargetPreview();
 
-    OnAttackConfirmed?.Invoke(attacker);
+            attackingUnit = null;
+            State = AttackState.None;
+
+            OnAttackConfirmed?.Invoke(attacker);
+        }
+    );
 }
 
 
@@ -190,6 +192,8 @@ public void ChangeTarget(GridTile tile)
                 targetUnit
             );
     }
+    
+    ArrowController.Instance?.ForceTarget(targetUnit);
 }
 
 public bool IsValidAttackTile(GridTile tile)
@@ -239,6 +243,7 @@ private void ClearTargetPreview()
     currentPrediction = null;
 
     CombatPreviewController.Instance?.ClearPreview();
+    ArrowController.Instance?.ClearForcedTarget();
 }
 
 public bool CanHoverTarget(GridTile tile)
