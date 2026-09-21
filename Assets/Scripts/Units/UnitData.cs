@@ -31,5 +31,8 @@ public int Accuracy = 100;
 public int Avoid = 0;
 public int Crit = 5;
 
+[Tooltip("Porcentagem base de chance de contra-atacar um golpe melee (0-100)")]
+public int CounterChance = 100;
+
 public int AttackRange = 1;
 }

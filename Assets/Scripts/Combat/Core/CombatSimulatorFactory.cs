@@ -9,11 +9,14 @@ public static class CombatSimulatorFactory
     public static CombatSimulator CreateStandard()
     {
         return new CombatSimulator(
-            new List<ICombatFactProvider>(),
+            new List<ICombatFactProvider>
+            {
+                new PositionFactProvider()
+            },
             new List<ICombatEvaluator>
             {
-                new TestModifierEvaluator(),
-                new TestFlankingEvaluator()
+                new PositionEvaluator(),
+                new BackstabCritEvaluator()
             },
             new CombatResolver()
         );

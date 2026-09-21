@@ -228,9 +228,37 @@ public class Unit : MonoBehaviour
     {
         visual?.SetWalking(true);
 
-        foreach (var tile in path)
+        GridTile currentStepTile = currentTile;
+
+        foreach (var nextTile in path)
         {
-            Vector3 targetPos = tile.WorldPosition;
+            if (nextTile == currentStepTile) continue;
+
+            // --- AOO CHECK ---
+            List<Unit> threateningEnemies = GetThreateningEnemies(currentStepTile);
+            if (threateningEnemies.Count > 0)
+            {
+                Debug.Log($"[AoO] {name} está saindo do tile ({currentStepTile.X},{currentStepTile.Y}) que é ameaçado por {threateningEnemies.Count} inimigo(s). Próximo tile: ({nextTile.X},{nextTile.Y})");
+            }
+
+            foreach (Unit enemy in threateningEnemies)
+            {
+                bool nextTileThreatened = Threatens(enemy, nextTile);
+                Debug.Log($"[AoO] Inimigo {enemy.name} ameaça o próximo tile? {nextTileThreatened}");
+
+                if (!nextTileThreatened)
+                {
+                    Debug.Log($"[AoO] TRIGGER! {name} saiu do alcance de {enemy.name}!");
+                    visual?.SetWalking(false);
+                    yield return CombatSystem.Instance.ExecuteAoORoutine(enemy, this);
+                    if (!IsAlive) break;
+                    visual?.SetWalking(true);
+                }
+            }
+
+            if (!IsAlive) break;
+
+            Vector3 targetPos = nextTile.WorldPosition;
             
             while (Vector3.Distance(transform.position, targetPos) > 0.01f)
             {
@@ -246,15 +274,76 @@ public class Unit : MonoBehaviour
                 yield return null;
             }
             transform.position = targetPos;
+            currentStepTile = nextTile;
         }
 
         visual?.SetWalking(false);
-        currentTile = finalTile;
 
-        Debug.Log($"{name} moved to ({finalTile.X},{finalTile.Y})");
-        OnMoved?.Invoke(this);
+        if (IsAlive)
+        {
+            currentTile = finalTile;
+            FaceClosestEnemy();
+            Debug.Log($"{name} moved to ({finalTile.X},{finalTile.Y})");
+            OnMoved?.Invoke(this);
+            onCompleted?.Invoke();
+        }
+        else
+        {
+            onCompleted?.Invoke();
+        }
+    }
+
+    public void FaceClosestEnemy()
+    {
+        if (UnitManager.Instance == null) return;
         
-        onCompleted?.Invoke();
+        float minDistance = float.MaxValue;
+        Unit closestEnemy = null;
+        
+        foreach (Unit u in UnitManager.Instance.Units)
+        {
+            if (u.IsAlive && u.Team != this.Team)
+            {
+                float dist = Vector3.Distance(transform.position, u.transform.position);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestEnemy = u;
+                }
+            }
+        }
+
+        if (closestEnemy != null)
+        {
+            Vector3 dir = (closestEnemy.transform.position - transform.position).normalized;
+            dir.y = 0;
+            if (dir.sqrMagnitude > 0.001f)
+            {
+                transform.rotation = Quaternion.LookRotation(dir);
+            }
+        }
+    }
+
+    public List<Unit> GetThreateningEnemies(GridTile tile)
+    {
+        List<Unit> enemies = new List<Unit>();
+        if (UnitManager.Instance == null) return enemies;
+
+        foreach (Unit u in UnitManager.Instance.Units)
+        {
+            if (u.IsAlive && u.Team != this.Team && Threatens(u, tile))
+            {
+                enemies.Add(u);
+            }
+        }
+        return enemies;
+    }
+
+    public bool Threatens(Unit enemy, GridTile tile)
+    {
+        if (enemy.CurrentTile == null || tile == null) return false;
+        int dist = Mathf.Abs(enemy.CurrentTile.X - tile.X) + Mathf.Abs(enemy.CurrentTile.Y - tile.Y);
+        return dist <= enemy.Data.AttackRange;
     }
 
     public void SetPreviewTile(GridTile tile)

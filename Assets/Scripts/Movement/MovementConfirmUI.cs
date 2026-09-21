@@ -98,6 +98,11 @@ private void Start()
     {
         panelRoot.SetActive(false);
 
+        if (actionMenuUI != null && actionMenuUI.cogPanelRoot != null)
+        {
+            actionMenuUI.cogPanelRoot.SetActive(false);
+        }
+
         if (EventSystem.current != null &&
             EventSystem.current.currentSelectedGameObject == confirmButton.gameObject)
         {

@@ -92,6 +92,30 @@ public class UnitVisual : MonoBehaviour
         }
     }
 
+    public void ForceAnimatorBool(string paramName, bool value)
+    {
+        if (animator != null)
+        {
+            foreach (var p in animator.parameters)
+            {
+                if (p.name == paramName && p.type == AnimatorControllerParameterType.Bool)
+                {
+                    animator.SetBool(paramName, value);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void ClearPendingTriggers()
+    {
+        if (animator != null)
+        {
+            animator.ResetTrigger(attackTriggerName);
+            animator.ResetTrigger(deathTriggerName);
+        }
+    }
+
     public void Select()
     {
         isSelected = true;

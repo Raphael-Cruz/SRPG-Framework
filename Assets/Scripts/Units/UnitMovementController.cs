@@ -215,9 +215,35 @@ public class UnitMovementController : MonoBehaviour
         {
             unit.Visual?.SetWalking(true);
 
-            foreach (GridTile step in path)
+            GridTile currentStepTile = unit.CurrentTile;
+
+            foreach (GridTile nextTile in path)
             {
-                Vector3 targetPos = step.WorldPosition;
+                if (nextTile == currentStepTile) continue;
+
+                // --- AOO CHECK ---
+                List<Unit> threateningEnemies = unit.GetThreateningEnemies(currentStepTile);
+                if (threateningEnemies.Count > 0)
+                {
+                    Debug.Log($"[AoO] {unit.name} saindo de {currentStepTile.X},{currentStepTile.Y} ameaçado por {threateningEnemies.Count} inimigos.");
+                }
+
+                foreach (Unit enemy in threateningEnemies)
+                {
+                    bool nextTileThreatened = unit.Threatens(enemy, nextTile);
+                    if (!nextTileThreatened)
+                    {
+                        Debug.Log($"[AoO] TRIGGER! {unit.name} tomou Ataque de Oportunidade de {enemy.name}!");
+                        unit.Visual?.SetWalking(false);
+                        yield return CombatSystem.Instance.ExecuteAoORoutine(enemy, unit);
+                        if (!unit.IsAlive) break;
+                        unit.Visual?.SetWalking(true);
+                    }
+                }
+
+                if (!unit.IsAlive) break;
+
+                Vector3 targetPos = nextTile.WorldPosition;
 
                 // Face the direction of movement instantly
                 Vector3 dir = targetPos - unit.transform.position;
@@ -233,18 +259,30 @@ public class UnitMovementController : MonoBehaviour
                     yield return null;
                 }
                 unit.transform.position = targetPos;
+                currentStepTile = nextTile;
             }
 
             unit.Visual?.SetWalking(false);
         }
 
-        // Commit tile occupancy & state (does NOT teleport — position is already correct)
-        unit.CommitMove(destination);
+        if (unit.IsAlive)
+        {
+            // Post-movement facing
+            unit.FaceClosestEnemy();
 
-        ApplyTerrainModifier(unit, destination);
+            // Commit tile occupancy & state (does NOT teleport — position is already correct)
+            unit.CommitMove(destination);
 
-        Debug.Log($"WalkRoutine done. Firing OnMovementConfirmed.");
-        OnMovementConfirmed?.Invoke(unit);
+            ApplyTerrainModifier(unit, destination);
+
+            Debug.Log($"WalkRoutine done. Firing OnMovementConfirmed.");
+            OnMovementConfirmed?.Invoke(unit);
+        }
+        else
+        {
+            // Unit died during movement
+            OnMovementConfirmed?.Invoke(unit);
+        }
     }
 
     private void ApplyTerrainModifier(Unit unit, GridTile tile)

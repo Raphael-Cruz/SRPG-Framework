@@ -110,7 +110,33 @@ Assets/LeartesStudios
 Assets/LeartesStudios.meta
 Assets/MeshyImports
 Assets/MeshyImports.meta
-Assets/TerrainTextures
+Assets/TerrainTexturesPS C:\Users\rapha\Unity\SRPG\SRPG> $env:UNITY_CLI_CHANNEL='beta'; irm https://public-cdn.cloud.unity3d.com/hub/prod/cli/install.ps1 | iex
+
+  Unity CLI Installer
+
+  info  Checking for latest version...
+  info  Installing version 1.0.0-beta.10 for win32-x64...
+  info  Downloading binary...
+  info  Verifying checksum...
+
+  ✔  Unity CLI 1.0.0-beta.10 installed!
+
+  Get started:
+    unity editors list     List installed Unity editors
+    unity install          Install a Unity editor
+    unity self-update      Update to the latest CLI version
+
+  unity is ready. Open a new terminal and run unity --help to get started.
+
+PS C:\Users\rapha\Unity\SRPG\SRPG> unity pipeline install
+unity : The term 'unity' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ unity pipeline install
++ ~~~~~
+    + CategoryInfo          : ObjectNotFound: (unity:String) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\rapha\Unity\SRPG\SRPG> 
 Assets/TerrainTextures.meta
 Assets/3rdPerson+Fly.meta
 Assets/3rdPerson+Fly

@@ -27,6 +27,7 @@ public class CombatantUIStats
 
     [Header("Modifiers")]
     public Transform ModifiersContainer; // Layout Group para os ícones
+    public TMP_Text CritMultiplierText; // Exibe a tag multiplicadora de dano (ex: x1.25)
 }
 
 public class CombatPreviewUI : MonoBehaviour
@@ -102,6 +103,26 @@ public class CombatPreviewUI : MonoBehaviour
                 // Image img = icon.GetComponent<Image>();
                 // img.sprite = mod.Icon;
             }
+        }
+
+        // Crit/Damage Multiplier Display
+        if (stats.CritMultiplierText != null)
+        {
+            // Procura o primeiro modificador que possua uma DisplayTag válida
+            string tagToDisplay = "";
+            foreach (var mod in modifiers)
+            {
+                if (!string.IsNullOrEmpty(mod.DisplayTag))
+                {
+                    tagToDisplay = mod.DisplayTag;
+                    // Você pode concatenar tags se quiser: tagToDisplay += mod.DisplayTag + " ";
+                    // Ou apenas pegar a primeira (mais importante), dependendo do design.
+                    break; 
+                }
+            }
+
+            stats.CritMultiplierText.text = tagToDisplay;
+            stats.CritMultiplierText.gameObject.SetActive(!string.IsNullOrEmpty(tagToDisplay));
         }
     }
 

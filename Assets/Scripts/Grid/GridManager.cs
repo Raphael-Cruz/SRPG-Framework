@@ -4,6 +4,9 @@ using System.Collections.Generic;
 public class GridManager : MonoBehaviour
 {
     [Header("Grid Settings")]
+    [Tooltip("O terreno específico a ser usado para gerar o grid. Se vazio, usará Terrain.activeTerrain.")]
+    [SerializeField] private Terrain targetTerrain;
+
     [Tooltip("Se ativo, calcula o tamanho do grid automaticamente baseado no Terrain da cena.")]
     [SerializeField] private bool autoSizeToTerrain = true;
     
@@ -52,10 +55,12 @@ public float CellSize => cellSize;
 
     private void GenerateGrid()
     {
+        Terrain terrainToUse = targetTerrain != null ? targetTerrain : Terrain.activeTerrain;
+
         // Se estiver configurado para auto-size, adapta ao terreno ativo
-        if (autoSizeToTerrain && Terrain.activeTerrain != null)
+        if (autoSizeToTerrain && terrainToUse != null)
         {
-            Vector3 terrainSize = Terrain.activeTerrain.terrainData.size;
+            Vector3 terrainSize = terrainToUse.terrainData.size;
             width = Mathf.FloorToInt(terrainSize.x / cellSize);
             height = Mathf.FloorToInt(terrainSize.z / cellSize);
 
@@ -64,7 +69,7 @@ public float CellSize => cellSize;
             if (height > 150) height = 150;
 
             // Move o GridManager para a origem do terreno para que o grid comece do ponto (0,0) do terreno
-            transform.position = Terrain.activeTerrain.transform.position;
+            transform.position = terrainToUse.transform.position;
         }
 
         grid = new GridTile[width, height];

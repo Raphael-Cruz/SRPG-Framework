@@ -5,15 +5,18 @@ public class CombatModifier
     public CombatModifierType Type { get; private set; }
     public float Value { get; private set; }
     public string Source { get; private set; }
+    public string DisplayTag { get; private set; }
 
     public CombatModifier(
         CombatModifierType type,
         float value,
-        string source)
+        string source,
+        string displayTag = "")
     {
         Type = type;
         Value = value;
         Source = source;
+        DisplayTag = displayTag;
     }
 
     // O método agora é genérico e serve para qualquer tipo de modificador.
