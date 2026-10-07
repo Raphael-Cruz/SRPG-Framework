@@ -80,9 +80,21 @@ public class CombatPreviewUI : MonoBehaviour
 
         if (stats.SPText != null) stats.SPText.text = $"{spGauge.CurrentSP} / {spGauge.MaxSP}";
 
-        if (stats.DamageText != null) stats.DamageText.text = $"{minDmg} - {maxDmg}";
-        if (stats.HitOrAvoidText != null) stats.HitOrAvoidText.text = $"{hitOrAvo:0}";
-        if (stats.CritText != null) stats.CritText.text = $"{crit:0}";
+        if (stats.DamageText != null) 
+        {
+            stats.DamageText.gameObject.SetActive(true);
+            stats.DamageText.text = $"{minDmg} - {maxDmg}";
+        }
+        if (stats.HitOrAvoidText != null) 
+        {
+            stats.HitOrAvoidText.gameObject.SetActive(true);
+            stats.HitOrAvoidText.text = $"{hitOrAvo:0}";
+        }
+        if (stats.CritText != null) 
+        {
+            stats.CritText.gameObject.SetActive(true);
+            stats.CritText.text = $"{crit:0}";
+        }
 
         // Modifiers
         if (stats.ModifiersContainer != null && modifierIconPrefab != null)

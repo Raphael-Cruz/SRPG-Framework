@@ -3,78 +3,62 @@ using UnityEngine.UI;
 
 public class HPGaugeView : MonoBehaviour
 {
-    [Header("Gauge Layers")]
-    [SerializeField] private Image emptyFill;
-    [SerializeField] private Image currentFill;
-    [SerializeField] private Image predictionFill;
+    [Header("Os Dois Sliders")]
+    [Tooltip("Slider que fica POR TRÁS. Ele vai até o HP ATUAL (ex: 30) e tem a cor vermelha.")]
+    public Slider damagePreviewSlider;
+    
+    [Tooltip("Slider que fica NA FRENTE. Ele vai até a VIDA RESTANTE (ex: 25) e tem a cor verde.")]
+    public Slider currentHPSlider;
 
+    [Header("Efeito de Piscar")]
+    [Tooltip("Arraste aqui o objeto 'Fill' do seu damagePreviewSlider")]
+    public Image imagemDoDano;
+    public float velocidadeDePiscar = 5f;
+    public Color corForte = new Color(1f, 0.2f, 0.2f, 1f);
+    public Color corFraca = new Color(1f, 0.2f, 0.2f, 0.4f);
 
-    [Header("Prediction Pulse")]
-    [SerializeField] private bool enablePredictionPulse = true;
-    [SerializeField] private float pulseSpeed = 2f;
+    private bool vaiTomarDano;
 
-    [SerializeField] private Color predictionLow = new Color(1f, 0.8f, 0f);
-    [SerializeField] private Color predictionHigh = new Color(1f, 1f, 0.3f);
-
-
-    private float pulseTimer;
-
-
-    private void Awake()
+    public void SetGauge(HPGaugeState state)
     {
-        emptyFill.fillAmount = 1f;
-    }
+        float maxHP = Mathf.Max(state.MaxHP, 1);
+        float hpAtual = state.CurrentHP;                 // Ex: 30
+        float dano = state.PredictedDamage;              // Ex: 5
+        float hpRestante = Mathf.Max(hpAtual - dano, 0); // Ex: 25
 
+        // Configura os valores máximos
+        if (damagePreviewSlider != null) damagePreviewSlider.maxValue = maxHP;
+        if (currentHPSlider != null) currentHPSlider.maxValue = maxHP;
+
+        // O Slider de trás (Dano) preenche até o HP Atual (30)
+        if (damagePreviewSlider != null) damagePreviewSlider.value = hpAtual;
+
+        // O Slider da frente (Vida) preenche até a Vida Restante (25)
+        if (currentHPSlider != null) currentHPSlider.value = hpRestante;
+
+        vaiTomarDano = (dano > 0);
+    }
 
     private void Update()
     {
-        if (!enablePredictionPulse)
-            return;
-
-
-        pulseTimer += Time.deltaTime;
-
-        float t = (Mathf.Sin(pulseTimer * pulseSpeed) + 1f) * 0.5f;
-
-
-        predictionFill.color = Color.Lerp(
-            predictionLow,
-            predictionHigh,
-            t);
+        // Se vai tomar dano, pisca a imagem vermelha
+        if (vaiTomarDano && imagemDoDano != null)
+        {
+            float tempo = (Mathf.Sin(Time.time * velocidadeDePiscar) + 1f) / 2f;
+            imagemDoDano.color = Color.Lerp(corFraca, corForte, tempo);
+        }
+        else if (imagemDoDano != null)
+        {
+            // Se não vai tomar dano, deixa da mesma cor da barra de vida normal
+            // para não ficar vermelho sem motivo
+            imagemDoDano.color = Color.clear;
+        }
     }
-
-
-public void SetGauge(HPGaugeState state)
-{
-    emptyFill.fillAmount = 1f;
-
-
-    // Yellow shows the whole current HP area
-    predictionFill.fillAmount = state.CurrentFill;
-
-
-    // Red covers the HP that remains after damage
-    float remainingHP =
-        Mathf.Max(
-            state.CurrentHP - state.PredictedDamage,
-            0
-        );
-
-
-    currentFill.fillAmount =
-        state.MaxHP <= 0
-            ? 0f
-            : (float)remainingHP / state.MaxHP;
-}
-
 
     public void Hide()
     {
-        currentFill.fillAmount = 0f;
-
-        predictionFill.fillAmount = 0f;
-
-        predictionFill.rectTransform.localRotation =
-            Quaternion.identity;
+        if (damagePreviewSlider != null) damagePreviewSlider.value = 0;
+        if (currentHPSlider != null) currentHPSlider.value = 0;
+        vaiTomarDano = false;
     }
 }

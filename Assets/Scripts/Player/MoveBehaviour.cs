@@ -38,6 +38,10 @@ public class MoveBehaviour : GenericBehaviour
 		// Get jump input.
 		if (!jump && Input.GetButtonDown(jumpButton) && behaviourManager.IsCurrentBehaviour(this.behaviourCode) && !behaviourManager.IsOverriding())
 		{
+			// Bloqueia pulo durante diálogo
+			if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive) 
+				return;
+
 			jump = true;
 		}
 	}

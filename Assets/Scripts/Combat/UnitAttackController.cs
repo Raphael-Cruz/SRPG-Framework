@@ -64,6 +64,9 @@ private void ExecuteAttack()
 
     Unit attacker = attackingUnit;
 
+    // Oculta o preview imediatamente antes do ataque começar a ser animado
+    CombatPreviewController.Instance?.ClearPreview();
+
     CombatSystem.Instance.Attack(
         attackingUnit,
         targetUnit,

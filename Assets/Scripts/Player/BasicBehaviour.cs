@@ -67,6 +67,13 @@ public class BasicBehaviour : MonoBehaviour
 		// returns 0 under the New Input System. Now reads from InputManager,
 		// same as every other gameplay script (MouseSelector, CameraController).
 		Vector2 move = InputManager.Instance.MoveInput;
+
+		// Bloqueia a movimentação se o diálogo estiver ativo
+		if (DialogueManager.Instance != null && DialogueManager.Instance.IsDialogueActive)
+		{
+			move = Vector2.zero;
+		}
+
 		h = move.x;
 		v = move.y;
 
